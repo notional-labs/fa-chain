@@ -1,0 +1,11 @@
+syntax = "proto3";
+package fachain.feeabstraction;
+
+option go_package = "github.com/nghuyenthevinh2000/fa-chain/x/feeabstraction/types";
+
+message HostZone {
+    string chain_id = 1;
+    string connection_id = 2;
+    string bech32prefix = 3;
+    string transfer_channel_id = 4;
+}

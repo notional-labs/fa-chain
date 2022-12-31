@@ -1,0 +1,47 @@
+syntax = "proto3";
+package fachain.feeabstraction;
+
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "fachain/feeabstraction/params.proto";
+// this line is used by starport scaffolding # 1
+
+option go_package = "github.com/nghuyenthevinh2000/fa-chain/x/feeabstraction/types";
+
+// Query defines the gRPC querier service.
+service Query {
+  // Parameters queries the parameters of the module.
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/github.com/nghuyenthevinh2000/fa-chain/feeabstraction/params";
+  }
+  rpc FeeRate(QueryFeeRateRequest) returns (QueryFeeRateResponse) {
+    option (google.api.http).get = "/github.com/nghuyenthevinh2000/fa-chain/feeabstraction/fee-rate";
+  }
+}
+
+// QueryParamsRequest is request type for the Query/Params RPC method.
+message QueryParamsRequest {}
+
+// QueryParamsResponse is response type for the Query/Params RPC method.
+message QueryParamsResponse {
+  // params holds all the parameters of this module.
+  Params params = 1 [(gogoproto.nullable) = false];
+}
+
+// Fee rate query for non - native token
+message QueryFeeRateRequest {
+  cosmos.base.v1beta1.Coin fee = 1 [
+    (gogoproto.nullable) = false,
+    (gogoproto.moretags) = "yaml:\"fee\""
+  ];
+}
+
+// Converted fee rate to native token
+message QueryFeeRateResponse {
+  cosmos.base.v1beta1.Coin fee_rate = 1 [
+    (gogoproto.nullable) = false,
+    (gogoproto.moretags) = "yaml:\"fee_rate\""
+  ];
+}
