@@ -2,7 +2,7 @@ package types
 
 const (
 	// ModuleName defines the module name
-	ModuleName = "fachain"
+	ModuleName = "feeabstraction"
 
 	// StoreKey defines the primary module store key
 	StoreKey = ModuleName
@@ -14,7 +14,7 @@ const (
 	QuerierRoute = ModuleName
 
 	// MemStoreKey defines the in-memory store key
-	MemStoreKey = "mem_fachain"
+	MemStoreKey = "mem_feeabstraction"
 
 	TWAP_STORE_QUERY = "/osmosis.twap.v1beta1.Query/ArithmeticTwapToNow"
 	POOL_STORE_QUERY = "/osmosis.gamm.v1beta1.Query/PoolsWithFilter"

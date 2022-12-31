@@ -50,9 +50,11 @@ func (k Keeper) BeginBlocker(ctx sdk.Context) {
 		}
 
 		req := gammtypes.QueryPoolsWithFilterRequest{
-			MinLiquidity: sdk.NewCoins(sdk.NewCoin(denomOsmo, sdk.ZeroInt()), sdk.NewCoin(GetIBCDenom(osmo_juno_channel_id, appparams.DefaultBondDenom).IBCDenom(), sdk.ZeroInt())),
+			MinLiquidity: sdk.NewCoins(sdk.NewCoin(denomOsmo, sdk.OneInt()), sdk.NewCoin(GetIBCDenom(osmo_juno_channel_id, appparams.DefaultBondDenom).IBCDenom(), sdk.OneInt())),
 			PoolType:     "Balancer",
 		}
+
+		k.Logger(ctx).Info(fmt.Sprintf("Preparing msg = %v", req))
 
 		data, err := req.Marshal()
 		if err != nil {
@@ -93,9 +95,12 @@ func (k Keeper) EndBlocker(ctx sdk.Context) {
 		k.Logger(ctx).Info(fmt.Sprintf("Found pool: (%s, %d)", denomOsmo, poolId))
 
 		// make request for twap
+		// TODO: better handling of start time
 		req := twapquery.ArithmeticTwapToNowRequest{
-			PoolId:    poolId,
-			BaseAsset: denomOsmo,
+			PoolId:     poolId,
+			BaseAsset:  denomOsmo,
+			QuoteAsset: GetIBCDenom(osmo_juno_channel_id, appparams.DefaultBondDenom).IBCDenom(),
+			StartTime:  time.Now().Add(-time.Second * 10),
 		}
 		data, err := req.Marshal()
 		if err != nil {

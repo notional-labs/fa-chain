@@ -110,6 +110,8 @@ import (
 	"github.com/nghuyenthevinh2000/fa-chain/x/interchainquery"
 	interchainquerykeeper "github.com/nghuyenthevinh2000/fa-chain/x/interchainquery/keeper"
 	interchainquerytypes "github.com/nghuyenthevinh2000/fa-chain/x/interchainquery/types"
+
+	"github.com/osmosis-labs/osmosis/v13/x/gamm"
 )
 
 const (
@@ -166,6 +168,7 @@ var (
 		monitoringp.AppModuleBasic{},
 		feeabstraction.AppModuleBasic{},
 		interchainquery.AppModuleBasic{},
+		gamm.AppModuleBasic{},
 	)
 
 	// module account permissions

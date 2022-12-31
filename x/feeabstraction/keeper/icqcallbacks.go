@@ -81,6 +81,12 @@ func PoolCallBack(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) 
 		return err
 	}
 
+	// empty query
+	if len(poolRes.Pools) == 0 {
+		k.Logger(ctx).Info(fmt.Sprint("Empty pool response"))
+		return nil
+	}
+
 	poolReq := &gammtypes.QueryPoolsWithFilterRequest{}
 	if err := poolReq.Unmarshal(query.Request); err != nil {
 		return err
@@ -92,7 +98,12 @@ func PoolCallBack(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) 
 		panic(err)
 	}
 
-	k.SetPool(ctx, poolReq.MinLiquidity.GetDenomByIndex(0), pool.GetId())
+	denom := poolReq.MinLiquidity.GetDenomByIndex(0)
+	if !k.HasDenomTrack(ctx, denom) {
+		denom = poolReq.MinLiquidity.GetDenomByIndex(1)
+	}
+
+	k.SetPool(ctx, denom, pool.GetId())
 
 	return nil
 }
