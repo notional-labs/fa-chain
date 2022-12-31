@@ -8,8 +8,6 @@ go get github.com/regen-network/cosmos-proto/protoc-gen-gocosmos 2>/dev/null
 # get cosmos sdk from github
 go get github.com/cosmos/cosmos-sdk@v0.45.11 2>/dev/null
 
-echo "Hello"
-
 echo "Generating gogo proto code"
 cd proto
 proto_dirs=$(find ./fachain -path -prune -o -name '*.proto' -print0 | xargs -0 -n1 dirname | sort | uniq)
