@@ -43,6 +43,7 @@ func (k Keeper) BeginBlocker(ctx sdk.Context) {
 	// get pools information from Osmosis
 	// make request for pools
 	k.IterateDenomTrack(ctx, func(denomOsmo, _ string) bool {
+
 		// check if it has pool
 		if k.HasPool(ctx, denomOsmo) {
 			return true
@@ -58,7 +59,11 @@ func (k Keeper) BeginBlocker(ctx sdk.Context) {
 			k.Logger(ctx).Error("failed to marshall request", "error", err)
 			return true
 		}
-		ttl := uint64(1000)
+		ttl, err := k.GetTtl(ctx)
+		if err != nil {
+			k.Logger(ctx).Error("failed to cast value", "error", err)
+			return true
+		}
 
 		if err := k.icqKeeper.MakeRequest(ctx,
 			types.ModuleName,
@@ -85,6 +90,8 @@ func (k Keeper) EndBlocker(ctx sdk.Context) {
 
 	// update fee
 	k.IteratePool(ctx, func(denomOsmo string, poolId uint64) bool {
+		k.Logger(ctx).Info(fmt.Sprintf("Found pool: (%s, %d)", denomOsmo, poolId))
+
 		// make request for twap
 		req := twapquery.ArithmeticTwapToNowRequest{
 			PoolId:    poolId,
@@ -95,7 +102,11 @@ func (k Keeper) EndBlocker(ctx sdk.Context) {
 			k.Logger(ctx).Error("failed to marshall request", "error", err)
 			return true
 		}
-		ttl := uint64(1000)
+		ttl, err := k.GetTtl(ctx)
+		if err != nil {
+			k.Logger(ctx).Error("failed to cast value", "error", err)
+			return true
+		}
 
 		if err := k.icqKeeper.MakeRequest(ctx,
 			types.ModuleName,

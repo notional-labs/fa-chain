@@ -1,14 +1,17 @@
 package cli
 
 import (
+	"context"
 	"fmt"
+
 	// "strings"
 
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	// "github.com/cosmos/cosmos-sdk/client/flags"
-	// sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/client/flags"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/nghuyenthevinh2000/fa-chain/x/feeabstraction/types"
 )
@@ -25,7 +28,38 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 	}
 
 	cmd.AddCommand(CmdQueryParams())
-	// this line is used by starport scaffolding # 1
+	cmd.AddCommand(CmdQueryFeeRate())
+
+	return cmd
+}
+
+func CmdQueryFeeRate() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "fee-rate [coin]",
+		Short: "shows fee-rate of a coin",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx := client.GetClientContextFromCmd(cmd)
+
+			queryClient := types.NewQueryClient(clientCtx)
+
+			coin, err := sdk.ParseCoinNormalized(args[0])
+			if err != nil {
+				return err
+			}
+
+			res, err := queryClient.FeeRate(context.Background(), &types.QueryFeeRateRequest{
+				Fee: coin,
+			})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
 }

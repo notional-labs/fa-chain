@@ -3,7 +3,9 @@ package keeper
 import (
 	"encoding/binary"
 	"fmt"
+	"time"
 
+	"github.com/spf13/cast"
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/nghuyenthevinh2000/fa-chain/x/feeabstraction/types"
@@ -131,4 +133,11 @@ func (k Keeper) IteratePool(ctx sdk.Context, f func(denomOsmo string, poolId uin
 			break
 		}
 	}
+}
+
+func (k Keeper) GetTtl(ctx sdk.Context) (uint64, error) {
+	currentTime := ctx.BlockTime()
+
+	// add 5 more mins to current time
+	return cast.ToUint64E(currentTime.Add(time.Minute * 5).UnixNano())
 }
