@@ -8,12 +8,14 @@ import (
 	"github.com/spf13/cast"
 	"github.com/tendermint/tendermint/libs/log"
 
+	appparams "github.com/nghuyenthevinh2000/fa-chain/app/params"
 	"github.com/nghuyenthevinh2000/fa-chain/x/feeabstraction/types"
 	icqkeeper "github.com/nghuyenthevinh2000/fa-chain/x/interchainquery/keeper"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	ibctransferkeeper "github.com/cosmos/ibc-go/v3/modules/apps/transfer/keeper"
 )
@@ -56,8 +58,8 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
 }
 
-// fee of non - native compared to ujuno
-// denom here is present on juno
+// fee of non - native compared to ufac
+// denom here is present on fachain
 func (k Keeper) SetFeeRate(ctx sdk.Context, denomJuno string, feeRate sdk.Dec) error {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.StoreFeeRate)
 	data, err := feeRate.Marshal()
@@ -79,10 +81,16 @@ func (k Keeper) GetFeeRate(ctx sdk.Context, denomJuno string) (sdk.Dec, error) {
 	return feeRate, nil
 }
 
+func (k Keeper) HasFeeRate(ctx sdk.Context, denomJuno string) bool {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.StoreFeeRate)
+	return store.Has([]byte(denomJuno))
+}
+
 // record for coins on osmosis to juno
 func (k Keeper) SetDenomTrack(ctx sdk.Context, denomOsmo, denomJuno string) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.StoreDenomTrack)
 	store.Set([]byte(denomOsmo), []byte(denomJuno))
+
 }
 
 func (k Keeper) HasDenomTrack(ctx sdk.Context, denomOsmo string) bool {
@@ -135,9 +143,26 @@ func (k Keeper) IteratePool(ctx sdk.Context, f func(denomOsmo string, poolId uin
 	}
 }
 
+// get TTL for ICQ message
 func (k Keeper) GetTtl(ctx sdk.Context) (uint64, error) {
 	currentTime := ctx.BlockTime()
 
 	// add 5 more mins to current time
 	return cast.ToUint64E(currentTime.Add(time.Minute * 5).UnixNano())
+}
+
+// convert non - native token to base denom price
+func (k Keeper) ConvertToBaseToken(ctx sdk.Context, inputFee sdk.Coin) (sdk.Coin, error) {
+	if inputFee.Denom == appparams.DefaultBondDenom {
+		return inputFee, nil
+	}
+
+	// get rate
+	feeRate, err := k.GetFeeRate(ctx, inputFee.GetDenom())
+	if err != nil {
+		return sdk.Coin{}, sdkerrors.Wrapf(types.ErrInvalidFeeToken, "%s", inputFee.GetDenom())
+	}
+
+	amt := sdk.NewDecFromInt(inputFee.Amount).Mul(feeRate).RoundInt()
+	return sdk.NewCoin(appparams.DefaultBondDenom, amt), nil
 }
