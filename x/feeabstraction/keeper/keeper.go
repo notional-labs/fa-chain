@@ -8,9 +8,9 @@ import (
 	"github.com/spf13/cast"
 	"github.com/tendermint/tendermint/libs/log"
 
-	appparams "github.com/nghuyenthevinh2000/fa-chain/app/params"
-	"github.com/nghuyenthevinh2000/fa-chain/x/feeabstraction/types"
-	icqkeeper "github.com/nghuyenthevinh2000/fa-chain/x/interchainquery/keeper"
+	appparams "github.com/notional-labs/fa-chain/app/params"
+	"github.com/notional-labs/fa-chain/x/feeabstraction/types"
+	icqkeeper "github.com/notional-labs/fa-chain/x/interchainquery/keeper"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"

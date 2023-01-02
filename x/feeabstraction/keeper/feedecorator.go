@@ -6,10 +6,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/nghuyenthevinh2000/fa-chain/x/feeabstraction/types"
+	"github.com/notional-labs/fa-chain/x/feeabstraction/types"
 
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	appparams "github.com/nghuyenthevinh2000/fa-chain/app/params"
+	appparams "github.com/notional-labs/fa-chain/app/params"
 )
 
 // MempoolFeeDecorator will check if the transaction's fee is at least as large

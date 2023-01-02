@@ -3,8 +3,8 @@ package interchainquery
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/nghuyenthevinh2000/fa-chain/x/interchainquery/keeper"
-	"github.com/nghuyenthevinh2000/fa-chain/x/interchainquery/types"
+	"github.com/notional-labs/fa-chain/x/interchainquery/keeper"
+	"github.com/notional-labs/fa-chain/x/interchainquery/types"
 )
 
 // InitGenesis initializes the capability module's state from a provided genesis

@@ -83,7 +83,7 @@ import (
 	ibchost "github.com/cosmos/ibc-go/v3/modules/core/24-host"
 	ibckeeper "github.com/cosmos/ibc-go/v3/modules/core/keeper"
 	ibctesting "github.com/cosmos/ibc-go/v3/testing"
-	appparams "github.com/nghuyenthevinh2000/fa-chain/app/params"
+	appparams "github.com/notional-labs/fa-chain/app/params"
 
 	ica "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts"
 	icacontroller "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/controller"
@@ -102,14 +102,14 @@ import (
 	tmos "github.com/tendermint/tendermint/libs/os"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/nghuyenthevinh2000/fa-chain/docs"
+	"github.com/notional-labs/fa-chain/docs"
 
-	feeabstraction "github.com/nghuyenthevinh2000/fa-chain/x/feeabstraction"
-	feeabstractionkeeper "github.com/nghuyenthevinh2000/fa-chain/x/feeabstraction/keeper"
-	feeabstractiontypes "github.com/nghuyenthevinh2000/fa-chain/x/feeabstraction/types"
-	"github.com/nghuyenthevinh2000/fa-chain/x/interchainquery"
-	interchainquerykeeper "github.com/nghuyenthevinh2000/fa-chain/x/interchainquery/keeper"
-	interchainquerytypes "github.com/nghuyenthevinh2000/fa-chain/x/interchainquery/types"
+	feeabstraction "github.com/notional-labs/fa-chain/x/feeabstraction"
+	feeabstractionkeeper "github.com/notional-labs/fa-chain/x/feeabstraction/keeper"
+	feeabstractiontypes "github.com/notional-labs/fa-chain/x/feeabstraction/types"
+	"github.com/notional-labs/fa-chain/x/interchainquery"
+	interchainquerykeeper "github.com/notional-labs/fa-chain/x/interchainquery/keeper"
+	interchainquerytypes "github.com/notional-labs/fa-chain/x/interchainquery/types"
 
 	"github.com/osmosis-labs/osmosis/v13/x/gamm"
 )

@@ -17,9 +17,9 @@ import (
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/nghuyenthevinh2000/fa-chain/x/feeabstraction/client/cli"
-	"github.com/nghuyenthevinh2000/fa-chain/x/feeabstraction/keeper"
-	"github.com/nghuyenthevinh2000/fa-chain/x/feeabstraction/types"
+	"github.com/notional-labs/fa-chain/x/feeabstraction/client/cli"
+	"github.com/notional-labs/fa-chain/x/feeabstraction/keeper"
+	"github.com/notional-labs/fa-chain/x/feeabstraction/types"
 )
 
 var (

@@ -19,10 +19,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 
-	"github.com/nghuyenthevinh2000/fa-chain/x/interchainquery/keeper"
+	"github.com/notional-labs/fa-chain/x/interchainquery/keeper"
 
-	"github.com/nghuyenthevinh2000/fa-chain/x/interchainquery/client/cli"
-	"github.com/nghuyenthevinh2000/fa-chain/x/interchainquery/types"
+	"github.com/notional-labs/fa-chain/x/interchainquery/client/cli"
+	"github.com/notional-labs/fa-chain/x/interchainquery/types"
 )
 
 var (

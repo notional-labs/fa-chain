@@ -20199,7 +20199,7 @@ paths:
           format: int64
       tags:
         - Query
-  /github.com/nghuyenthevinh2000/fa-chain/fachain/params:
+  /github.com/notional-labs/fa-chain/fachain/params:
     get:
       summary: Parameters queries the parameters of the module.
       operationId: FachainFachainParams

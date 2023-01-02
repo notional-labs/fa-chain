@@ -4,7 +4,7 @@ package fachain.interchainquery.v1;
 import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
 
-option go_package = "github.com/nghuyenthevinh2000/fa-chain/x/interchainquery/types";
+option go_package = "github.com/notional-labs/fa-chain/x/interchainquery/types";
 
 message Query {
   string id = 1;

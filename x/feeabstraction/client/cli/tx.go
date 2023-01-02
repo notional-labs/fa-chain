@@ -8,7 +8,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	// "github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/nghuyenthevinh2000/fa-chain/x/feeabstraction/types"
+	"github.com/notional-labs/fa-chain/x/feeabstraction/types"
 )
 
 var (

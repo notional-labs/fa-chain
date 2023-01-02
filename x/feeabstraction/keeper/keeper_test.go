@@ -10,11 +10,11 @@ import (
 	clienttypes "github.com/cosmos/ibc-go/v3/modules/core/02-client/types"
 	ibctesting "github.com/cosmos/ibc-go/v3/testing"
 
-	"github.com/nghuyenthevinh2000/fa-chain/app"
-	"github.com/nghuyenthevinh2000/fa-chain/app/apptesting"
-	appparams "github.com/nghuyenthevinh2000/fa-chain/app/params"
-	"github.com/nghuyenthevinh2000/fa-chain/x/interchainquery/keeper"
-	"github.com/nghuyenthevinh2000/fa-chain/x/interchainquery/types"
+	"github.com/notional-labs/fa-chain/app"
+	"github.com/notional-labs/fa-chain/app/apptesting"
+	appparams "github.com/notional-labs/fa-chain/app/params"
+	"github.com/notional-labs/fa-chain/x/interchainquery/keeper"
+	"github.com/notional-labs/fa-chain/x/interchainquery/types"
 	osmoparams "github.com/osmosis-labs/osmosis/v13/app/params"
 )
 

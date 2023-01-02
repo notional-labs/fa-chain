@@ -9,8 +9,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	ibctransfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
-	appparams "github.com/nghuyenthevinh2000/fa-chain/app/params"
-	"github.com/nghuyenthevinh2000/fa-chain/x/feeabstraction/types"
+	appparams "github.com/notional-labs/fa-chain/app/params"
+	"github.com/notional-labs/fa-chain/x/feeabstraction/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 	twapquery "github.com/osmosis-labs/osmosis/v13/x/twap/client/queryproto"
 )

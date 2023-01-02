@@ -1,11 +1,11 @@
 package keeper_test
 
 import (
-	"github.com/nghuyenthevinh2000/fa-chain/app"
+	"github.com/notional-labs/fa-chain/app"
 	osmoparams "github.com/osmosis-labs/osmosis/v13/app/params"
 )
 
-// go test -v -run ^TestKeeperTestSuite/TestIdentifyChain$ github.com/nghuyenthevinh2000/fa-chain/x/feeabstraction/keeper
+// go test -v -run ^TestKeeperTestSuite/TestIdentifyChain$ github.com/notional-labs/fa-chain/x/feeabstraction/keeper
 func (s KeeperTestSuite) TestIdentifyChain() {
 	s.SetupTest()
 

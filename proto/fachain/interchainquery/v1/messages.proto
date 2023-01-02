@@ -6,7 +6,7 @@ import "cosmos_proto/cosmos.proto";
 import "google/api/annotations.proto";
 import "tendermint/crypto/proof.proto";
 
-option go_package = "github.com/nghuyenthevinh2000/fa-chain/x/interchainquery/types";
+option go_package = "github.com/notional-labs/fa-chain/x/interchainquery/types";
 
 // Msg defines the interchainquery Msg service.
 service Msg {

@@ -5,9 +5,6 @@ set -eo pipefail
 # get protoc executions
 go get github.com/regen-network/cosmos-proto/protoc-gen-gocosmos 2>/dev/null
 
-# get cosmos sdk from github
-go get github.com/cosmos/cosmos-sdk@v0.45.11 2>/dev/null
-
 echo "Generating gogo proto code"
 cd proto
 proto_dirs=$(find ./fachain -path -prune -o -name '*.proto' -print0 | xargs -0 -n1 dirname | sort | uniq)
@@ -24,5 +21,5 @@ cd ..
 # move proto files to the right places
 #
 # Note: Proto files are suffixed with the current binary version.
-cp -r github.com/nghuyenthevinh2000/fa-chain/* ./
+cp -r github.com/notional-labs/fa-chain/* ./
 rm -rf github.com

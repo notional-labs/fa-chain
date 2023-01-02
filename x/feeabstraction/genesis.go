@@ -2,8 +2,8 @@ package fachain
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/nghuyenthevinh2000/fa-chain/x/feeabstraction/keeper"
-	"github.com/nghuyenthevinh2000/fa-chain/x/feeabstraction/types"
+	"github.com/notional-labs/fa-chain/x/feeabstraction/keeper"
+	"github.com/notional-labs/fa-chain/x/feeabstraction/types"
 )
 
 // InitGenesis initializes the capability module's state from a provided genesis

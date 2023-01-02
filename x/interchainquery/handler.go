@@ -6,8 +6,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/nghuyenthevinh2000/fa-chain/x/interchainquery/keeper"
-	"github.com/nghuyenthevinh2000/fa-chain/x/interchainquery/types"
+	"github.com/notional-labs/fa-chain/x/interchainquery/keeper"
+	"github.com/notional-labs/fa-chain/x/interchainquery/types"
 )
 
 // NewHandler returns a handler for interchainquery module messages

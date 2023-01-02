@@ -2,7 +2,7 @@ package app
 
 import (
 	"github.com/cosmos/cosmos-sdk/std"
-	"github.com/nghuyenthevinh2000/fa-chain/app/params"
+	"github.com/notional-labs/fa-chain/app/params"
 )
 
 var (

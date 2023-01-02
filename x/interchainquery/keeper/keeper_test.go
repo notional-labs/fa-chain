@@ -5,9 +5,9 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/nghuyenthevinh2000/fa-chain/app/apptesting"
-	"github.com/nghuyenthevinh2000/fa-chain/x/interchainquery/keeper"
-	"github.com/nghuyenthevinh2000/fa-chain/x/interchainquery/types"
+	"github.com/notional-labs/fa-chain/app/apptesting"
+	"github.com/notional-labs/fa-chain/x/interchainquery/keeper"
+	"github.com/notional-labs/fa-chain/x/interchainquery/types"
 )
 
 type KeeperTestSuite struct {

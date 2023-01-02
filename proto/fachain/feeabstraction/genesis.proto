@@ -4,7 +4,7 @@ package fachain.feeabstraction;
 import "gogoproto/gogo.proto";
 import "fachain/feeabstraction/params.proto";
 
-option go_package = "github.com/nghuyenthevinh2000/fa-chain/x/feeabstraction/types";
+option go_package = "github.com/notional-labs/fa-chain/x/feeabstraction/types";
 
 // GenesisState defines the fachain module's genesis state.
 message GenesisState {

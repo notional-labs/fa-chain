@@ -13,7 +13,7 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
 
-	appparams "github.com/nghuyenthevinh2000/fa-chain/app/params"
+	appparams "github.com/notional-labs/fa-chain/app/params"
 	osmoapp "github.com/osmosis-labs/osmosis/v13/app"
 	osmoparams "github.com/osmosis-labs/osmosis/v13/app/params"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"

@@ -19,8 +19,8 @@ import (
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	tmtypes "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/nghuyenthevinh2000/fa-chain/app"
-	appparams "github.com/nghuyenthevinh2000/fa-chain/app/params"
+	"github.com/notional-labs/fa-chain/app"
+	appparams "github.com/notional-labs/fa-chain/app/params"
 	osmoapp "github.com/osmosis-labs/osmosis/v13/app"
 	osmoparams "github.com/osmosis-labs/osmosis/v13/app/params"
 )
