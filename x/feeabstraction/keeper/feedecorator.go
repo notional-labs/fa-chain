@@ -109,7 +109,7 @@ type DeductFeeDecorator struct {
 	ak             types.AccountKeeper
 	bankKeeper     types.BankKeeper
 	feegrantKeeper types.FeegrantKeeper
-	txFeesKeeper   Keeper
+	faKeeper       Keeper
 }
 
 func NewDeductFeeDecorator(tk Keeper, ak types.AccountKeeper, bk types.BankKeeper, fk types.FeegrantKeeper) DeductFeeDecorator {
@@ -117,7 +117,7 @@ func NewDeductFeeDecorator(tk Keeper, ak types.AccountKeeper, bk types.BankKeepe
 		ak:             ak,
 		bankKeeper:     bk,
 		feegrantKeeper: fk,
-		txFeesKeeper:   tk,
+		faKeeper:       tk,
 	}
 }
 
@@ -167,7 +167,7 @@ func (dfd DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bo
 
 	// deducts the fees and transfer them to the module account
 	if !feeTx.GetFee().IsZero() {
-		err = DeductFees(dfd.txFeesKeeper, dfd.bankKeeper, ctx, deductFeesFromAcc, feeTx.GetFee())
+		err = DeductFees(dfd.faKeeper, dfd.bankKeeper, ctx, deductFeesFromAcc, feeTx.GetFee())
 		if err != nil {
 			return ctx, err
 		}
@@ -181,20 +181,14 @@ func (dfd DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bo
 }
 
 // DeductFees deducts fees from the given account and transfers them to the set module account.
-func DeductFees(txFeesKeeper types.TxFeesKeeper, bankKeeper types.BankKeeper, ctx sdk.Context, acc authtypes.AccountI, fees sdk.Coins) error {
+func DeductFees(faKeeper Keeper, bankKeeper types.BankKeeper, ctx sdk.Context, acc authtypes.AccountI, fees sdk.Coins) error {
 	// Checks the validity of the fee tokens (sorted, have positive amount, valid and unique denomination)
 	if !fees.IsValid() {
 		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "invalid fee amount: %s", fees)
 	}
 
-	// pulls base denom from TxFeesKeeper (should be uOSMO)
-	baseDenom, err := txFeesKeeper.GetBaseDenom(ctx)
-	if err != nil {
-		return err
-	}
-
 	// checks if input fee is uOSMO (assumes only one fee token exists in the fees array (as per the check in mempoolFeeDecorator))
-	if fees[0].Denom == baseDenom {
+	if fees[0].Denom == appparams.DefaultBondDenom {
 		// sends to FeeCollectorName module account
 		err := bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), types.FeeCollectorName, fees)
 		if err != nil {

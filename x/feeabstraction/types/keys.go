@@ -18,6 +18,12 @@ const (
 
 	TWAP_STORE_QUERY = "/osmosis.twap.v1beta1.Query/ArithmeticTwapToNow"
 	POOL_STORE_QUERY = "/osmosis.gamm.v1beta1.Query/PoolsWithFilter"
+
+	// FeeCollectorName the module account name for the fee collector account address.
+	FeeCollectorName = "fee_collector"
+
+	// NonNativeFeeCollectorName the module account name for the alt fee collector account address (used for auto-swapping non-base-denom tx fees).
+	NonNativeFeeCollectorName = "non_native_fee_collector"
 )
 
 var (
