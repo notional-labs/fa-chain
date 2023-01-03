@@ -7,7 +7,10 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	icatypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/types"
@@ -114,7 +117,7 @@ func (s *AppTestHelper) SetupIBCChains(hostChainID string) {
 	s.Coordinator = ibctesting.NewCoordinator(s.T(), 0)
 
 	// Initialize a stride testing app by casting a StrideApp -> TestingApp
-	ibctesting.DefaultTestingAppInit = app.InitStrideIBCTestingApp
+	ibctesting.DefaultTestingAppInit = app.InitIBCTestingApp
 	s.Chain = ibctesting.NewTestChain(s.T(), s.Coordinator, ChainID)
 
 	// Initialize a host testing app using SimApp -> TestingApp
@@ -149,7 +152,7 @@ func (s *AppTestHelper) CreateTransferChannel(hostChainID string) {
 	s.HostCtx = s.HostChain.GetContext()
 
 	// fund accounts on both chain
-	s.FundAppAccount(s.Chain.SenderAccount.GetAddress(), sdk.NewCoin(appparams.DefaultBondDenom, sdk.NewIntFromUint64(1000000000000)))
+	s.FundAppAccount(s.Chain.SenderAccount.GetAddress(), sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewIntFromUint64(1000000000000)))
 	s.FundHostAppAccount(s.HostChain.SenderAccount.GetAddress(), sdk.NewCoin(osmoparams.DefaultBondDenom, sdk.NewIntFromUint64(1000000000000)))
 
 	// Finally confirm the channel was setup properly
@@ -333,6 +336,27 @@ func (s *AppTestHelper) ConfirmUpgradeSucceededs(upgradeName string, upgradeHeig
 		beginBlockRequest := abci.RequestBeginBlock{}
 		s.App.BeginBlocker(contextAtUpgrade, beginBlockRequest)
 	})
+}
+
+// BuildTx builds a transaction.
+func (s *AppTestHelper) BuildTx(
+	txBuilder client.TxBuilder,
+	msgs []sdk.Msg,
+	sigV2 signing.SignatureV2,
+	memo string, txFee sdk.Coins,
+	gasLimit uint64,
+) authsigning.Tx {
+	err := txBuilder.SetMsgs(msgs[0])
+	s.Require().NoError(err)
+
+	err = txBuilder.SetSignatures(sigV2)
+	s.Require().NoError(err)
+
+	txBuilder.SetMemo(memo)
+	txBuilder.SetFeeAmount(txFee)
+	txBuilder.SetGasLimit(gasLimit)
+
+	return txBuilder.GetTx()
 }
 
 // Generates a valid and invalid test address (used for non-keeper tests)

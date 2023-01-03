@@ -9,7 +9,6 @@ import (
 	"github.com/notional-labs/fa-chain/x/feeabstraction/types"
 
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	appparams "github.com/notional-labs/fa-chain/app/params"
 )
 
 // MempoolFeeDecorator will check if the transaction's fee is at least as large
@@ -43,10 +42,15 @@ func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 		return ctx, types.ErrTooManyFeeCoins
 	}
 
+	baseDenom, err := mfd.FAKeeper.GetBaseDenom(ctx)
+	if err != nil {
+		return ctx, err
+	}
+
 	// If there is a fee attached to the tx, make sure the fee denom is a denom accepted by the chain
 	if len(feeCoins) == 1 {
 		feeDenom := feeCoins.GetDenomByIndex(0)
-		if feeDenom != appparams.DefaultBondDenom {
+		if feeDenom != baseDenom {
 			// check if denom is supported
 			if !mfd.FAKeeper.HasFeeRate(ctx, feeDenom) {
 				return ctx, sdkerrors.Wrapf(types.ErrInvalidFeeToken, "%s", feeDenom)
@@ -59,13 +63,13 @@ func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 	// So we ensure that the provided fees meet a minimum threshold for the validator,
 	// converting every non-osmo specified asset into an osmo-equivalent amount, to determine sufficiency.
 	if (ctx.IsCheckTx() || ctx.IsReCheckTx()) && !simulate {
-		minBaseGasPrice := mfd.GetMinBaseGasPriceForTx(ctx, appparams.DefaultBondDenom, feeTx)
+		minBaseGasPrice := mfd.GetMinBaseGasPriceForTx(ctx, baseDenom, feeTx)
 		if !(minBaseGasPrice.IsZero()) {
 			// You should only be able to pay with one fee token in a single tx
 			if len(feeCoins) != 1 {
 				return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "no fee attached")
 			}
-			err = mfd.FAKeeper.IsSufficientFee(ctx, minBaseGasPrice, feeTx.GetGas(), feeCoins[0])
+			err = mfd.FAKeeper.IsSufficientFee(ctx, minBaseGasPrice, feeTx.GetGas(), feeCoins[0], baseDenom)
 			if err != nil {
 				return ctx, err
 			}
@@ -77,11 +81,11 @@ func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 
 // IsSufficientFee checks if the feeCoin provided (in any asset), is worth enough osmo at current spot prices
 // to pay the gas cost of this tx.
-func (k Keeper) IsSufficientFee(ctx sdk.Context, minBaseGasPrice sdk.Dec, gasRequested uint64, feeCoin sdk.Coin) error {
+func (k Keeper) IsSufficientFee(ctx sdk.Context, minBaseGasPrice sdk.Dec, gasRequested uint64, feeCoin sdk.Coin, baseDenom string) error {
 	// Determine the required fees by multiplying the required minimum gas
 	// price by the gas limit, where fee = ceil(minGasPrice * gasLimit).
 	glDec := sdk.NewDec(int64(gasRequested))
-	requiredBaseFee := sdk.NewCoin(appparams.DefaultBondDenom, minBaseGasPrice.Mul(glDec).Ceil().RoundInt())
+	requiredBaseFee := sdk.NewCoin(baseDenom, minBaseGasPrice.Mul(glDec).Ceil().RoundInt())
 
 	convertedFee, err := k.ConvertToBaseToken(ctx, feeCoin)
 	if err != nil {
@@ -112,12 +116,12 @@ type DeductFeeDecorator struct {
 	faKeeper       Keeper
 }
 
-func NewDeductFeeDecorator(tk Keeper, ak types.AccountKeeper, bk types.BankKeeper, fk types.FeegrantKeeper) DeductFeeDecorator {
+func NewDeductFeeDecorator(fa Keeper, ak types.AccountKeeper, bk types.BankKeeper, fk types.FeegrantKeeper) DeductFeeDecorator {
 	return DeductFeeDecorator{
 		ak:             ak,
 		bankKeeper:     bk,
 		feegrantKeeper: fk,
-		faKeeper:       tk,
+		faKeeper:       fa,
 	}
 }
 
@@ -128,8 +132,8 @@ func (dfd DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bo
 	}
 
 	// checks to make sure the module account has been set to collect fees in base token
-	if addr := dfd.ak.GetModuleAddress(types.FeeCollectorName); addr == nil {
-		return ctx, fmt.Errorf("fee collector module account (%s) has not been set", types.FeeCollectorName)
+	if addr := dfd.ak.GetModuleAddress(authtypes.FeeCollectorName); addr == nil {
+		return ctx, fmt.Errorf("fee collector module account (%s) has not been set", authtypes.FeeCollectorName)
 	}
 
 	// checks to make sure a separate module account has been set to collect fees not in base token
@@ -166,8 +170,13 @@ func (dfd DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bo
 	}
 
 	// deducts the fees and transfer them to the module account
+	baseDenom, err := dfd.faKeeper.GetBaseDenom(ctx)
+	if err != nil {
+		return ctx, err
+	}
+
 	if !feeTx.GetFee().IsZero() {
-		err = DeductFees(dfd.faKeeper, dfd.bankKeeper, ctx, deductFeesFromAcc, feeTx.GetFee())
+		err = DeductFees(dfd.faKeeper, dfd.bankKeeper, ctx, deductFeesFromAcc, feeTx.GetFee(), baseDenom)
 		if err != nil {
 			return ctx, err
 		}
@@ -181,16 +190,16 @@ func (dfd DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bo
 }
 
 // DeductFees deducts fees from the given account and transfers them to the set module account.
-func DeductFees(faKeeper Keeper, bankKeeper types.BankKeeper, ctx sdk.Context, acc authtypes.AccountI, fees sdk.Coins) error {
+func DeductFees(faKeeper Keeper, bankKeeper types.BankKeeper, ctx sdk.Context, acc authtypes.AccountI, fees sdk.Coins, baseDenom string) error {
 	// Checks the validity of the fee tokens (sorted, have positive amount, valid and unique denomination)
 	if !fees.IsValid() {
 		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "invalid fee amount: %s", fees)
 	}
 
-	// checks if input fee is uOSMO (assumes only one fee token exists in the fees array (as per the check in mempoolFeeDecorator))
-	if fees[0].Denom == appparams.DefaultBondDenom {
+	// checks if input fee is base denom (assumes only one fee token exists in the fees array (as per the check in mempoolFeeDecorator))
+	if fees[0].Denom == baseDenom {
 		// sends to FeeCollectorName module account
-		err := bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), types.FeeCollectorName, fees)
+		err := bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), authtypes.FeeCollectorName, fees)
 		if err != nil {
 			return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
 		}

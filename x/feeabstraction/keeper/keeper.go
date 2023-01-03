@@ -22,12 +22,14 @@ import (
 
 type (
 	Keeper struct {
-		cdc            codec.BinaryCodec
-		storeKey       sdk.StoreKey
-		memKey         sdk.StoreKey
-		paramstore     paramtypes.Subspace
-		icqKeeper      icqkeeper.Keeper
-		transferKeeper ibctransferkeeper.Keeper
+		cdc                       codec.BinaryCodec
+		storeKey                  sdk.StoreKey
+		memKey                    sdk.StoreKey
+		paramstore                paramtypes.Subspace
+		icqKeeper                 icqkeeper.Keeper
+		transferKeeper            ibctransferkeeper.Keeper
+		feeCollectorName          string
+		nonNativeFeeCollectorName string
 	}
 )
 
@@ -38,6 +40,8 @@ func NewKeeper(
 	ps paramtypes.Subspace,
 	icqKeeper icqkeeper.Keeper,
 	transferKeeper ibctransferkeeper.Keeper,
+	feeCollectorName string,
+	nonNativeFeeCollectorName string,
 ) *Keeper {
 	// set KeyTable if it has not already been set
 	if !ps.HasKeyTable() {
@@ -45,12 +49,14 @@ func NewKeeper(
 	}
 
 	return &Keeper{
-		cdc:            cdc,
-		storeKey:       storeKey,
-		memKey:         memKey,
-		paramstore:     ps,
-		icqKeeper:      icqKeeper,
-		transferKeeper: transferKeeper,
+		cdc:                       cdc,
+		storeKey:                  storeKey,
+		memKey:                    memKey,
+		paramstore:                ps,
+		icqKeeper:                 icqKeeper,
+		transferKeeper:            transferKeeper,
+		feeCollectorName:          feeCollectorName,
+		nonNativeFeeCollectorName: nonNativeFeeCollectorName,
 	}
 }
 
@@ -165,4 +171,30 @@ func (k Keeper) ConvertToBaseToken(ctx sdk.Context, inputFee sdk.Coin) (sdk.Coin
 
 	amt := sdk.NewDecFromInt(inputFee.Amount).Mul(feeRate).RoundInt()
 	return sdk.NewCoin(appparams.DefaultBondDenom, amt), nil
+}
+
+// set and get base denom to be used by fee decorator
+func (k Keeper) GetBaseDenom(ctx sdk.Context) (denom string, err error) {
+	store := ctx.KVStore(k.storeKey)
+
+	if !store.Has(types.BaseDenomKey) {
+		return "", types.ErrNoBaseDenom
+	}
+
+	bz := store.Get(types.BaseDenomKey)
+
+	return string(bz), nil
+}
+
+// SetBaseDenom sets the base fee denom for the chain. Should only be used once.
+func (k Keeper) SetBaseDenom(ctx sdk.Context, denom string) error {
+	store := ctx.KVStore(k.storeKey)
+
+	err := sdk.ValidateDenom(denom)
+	if err != nil {
+		return err
+	}
+
+	store.Set(types.BaseDenomKey, []byte(denom))
+	return nil
 }

@@ -59,7 +59,7 @@ func InitTestApp(initChain bool) *App {
 }
 
 // Initializes a new Stride App casted as a TestingApp for IBC support
-func InitStrideIBCTestingApp() (ibctesting.TestingApp, map[string]json.RawMessage) {
+func InitIBCTestingApp() (ibctesting.TestingApp, map[string]json.RawMessage) {
 	app := InitTestApp(false)
 	return ibctesting.TestingApp(app), NewDefaultGenesisState(app.appCodec)
 }
@@ -95,7 +95,7 @@ func OsmoGenesisStateWithPools(app *osmoapp.OsmosisApp) osmoapp.GenesisState {
 	gen := osmoapp.NewDefaultGenesisState()
 
 	// ufac ibc format
-	ibcDenom := GetIBCDenom("channel-0", appparams.DefaultBondDenom).IBCDenom()
+	ibcDenom := GetIBCDenom("channel-0", sdk.DefaultBondDenom).IBCDenom()
 
 	balancerPool, _ := balancer.NewBalancerPool(1, balancer.PoolParams{
 		SwapFee: sdk.NewDecWithPrec(1, 2),

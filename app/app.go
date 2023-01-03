@@ -173,15 +173,16 @@ var (
 
 	// module account permissions
 	maccPerms = map[string][]string{
-		authtypes.FeeCollectorName:      nil,
-		distrtypes.ModuleName:           nil,
-		minttypes.ModuleName:            {authtypes.Minter},
-		stakingtypes.BondedPoolName:     {authtypes.Burner, authtypes.Staking},
-		stakingtypes.NotBondedPoolName:  {authtypes.Burner, authtypes.Staking},
-		govtypes.ModuleName:             {authtypes.Burner},
-		ibctransfertypes.ModuleName:     {authtypes.Minter, authtypes.Burner},
-		interchainquerytypes.ModuleName: nil,
-		icatypes.ModuleName:             nil,
+		authtypes.FeeCollectorName:                    nil,
+		distrtypes.ModuleName:                         nil,
+		minttypes.ModuleName:                          {authtypes.Minter},
+		stakingtypes.BondedPoolName:                   {authtypes.Burner, authtypes.Staking},
+		stakingtypes.NotBondedPoolName:                {authtypes.Burner, authtypes.Staking},
+		govtypes.ModuleName:                           {authtypes.Burner},
+		ibctransfertypes.ModuleName:                   {authtypes.Minter, authtypes.Burner},
+		interchainquerytypes.ModuleName:               nil,
+		icatypes.ModuleName:                           nil,
+		feeabstractiontypes.NonNativeFeeCollectorName: nil,
 	}
 )
 
@@ -402,6 +403,8 @@ func New(
 		app.GetSubspace(feeabstractiontypes.ModuleName),
 		app.InterchainqueryKeeper,
 		app.TransferKeeper,
+		authtypes.FeeCollectorName,
+		feeabstractiontypes.NonNativeFeeCollectorName,
 	)
 	faModule := feeabstraction.NewAppModule(appCodec, app.FAKeeper, app.AccountKeeper, app.BankKeeper)
 

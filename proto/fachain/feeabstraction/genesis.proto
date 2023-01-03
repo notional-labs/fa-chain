@@ -10,4 +10,5 @@ option go_package = "github.com/notional-labs/fa-chain/x/feeabstraction/types";
 message GenesisState {
   Params params = 1 [(gogoproto.nullable) = false];
   // this line is used by starport scaffolding # genesis/proto/state
+  string base_denom = 2 [(gogoproto.moretags) = "yaml:\"base_denom\""];
 }

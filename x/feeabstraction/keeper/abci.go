@@ -9,7 +9,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	ibctransfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
-	appparams "github.com/notional-labs/fa-chain/app/params"
 	"github.com/notional-labs/fa-chain/x/feeabstraction/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 	twapquery "github.com/osmosis-labs/osmosis/v13/x/twap/client/queryproto"
@@ -49,8 +48,14 @@ func (k Keeper) BeginBlocker(ctx sdk.Context) {
 			return true
 		}
 
+		baseDenom, err := k.GetBaseDenom(ctx)
+		if err != nil {
+			k.Logger(ctx).Error(err.Error())
+			return true
+		}
+
 		req := gammtypes.QueryPoolsWithFilterRequest{
-			MinLiquidity: sdk.NewCoins(sdk.NewCoin(denomOsmo, sdk.OneInt()), sdk.NewCoin(GetIBCDenom(osmo_juno_channel_id, appparams.DefaultBondDenom).IBCDenom(), sdk.OneInt())),
+			MinLiquidity: sdk.NewCoins(sdk.NewCoin(denomOsmo, sdk.OneInt()), sdk.NewCoin(GetIBCDenom(osmo_juno_channel_id, baseDenom).IBCDenom(), sdk.OneInt())),
 			PoolType:     "Balancer",
 		}
 
@@ -94,12 +99,18 @@ func (k Keeper) EndBlocker(ctx sdk.Context) {
 	k.IteratePool(ctx, func(denomOsmo string, poolId uint64) bool {
 		k.Logger(ctx).Info(fmt.Sprintf("Found pool: (%s, %d)", denomOsmo, poolId))
 
+		baseDenom, err := k.GetBaseDenom(ctx)
+		if err != nil {
+			k.Logger(ctx).Error(err.Error())
+			return true
+		}
+
 		// make request for twap
 		// TODO: better handling of start time
 		req := twapquery.ArithmeticTwapToNowRequest{
 			PoolId:     poolId,
 			BaseAsset:  denomOsmo,
-			QuoteAsset: GetIBCDenom(osmo_juno_channel_id, appparams.DefaultBondDenom).IBCDenom(),
+			QuoteAsset: GetIBCDenom(osmo_juno_channel_id, baseDenom).IBCDenom(),
 			StartTime:  time.Now().Add(-time.Second * 10),
 		}
 		data, err := req.Marshal()

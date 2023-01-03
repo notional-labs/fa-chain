@@ -12,7 +12,6 @@ import (
 
 	"github.com/notional-labs/fa-chain/app"
 	"github.com/notional-labs/fa-chain/app/apptesting"
-	appparams "github.com/notional-labs/fa-chain/app/params"
 	"github.com/notional-labs/fa-chain/x/interchainquery/keeper"
 	"github.com/notional-labs/fa-chain/x/interchainquery/types"
 	osmoparams "github.com/osmosis-labs/osmosis/v13/app/params"
@@ -23,7 +22,8 @@ const (
 )
 
 var (
-	BaseDenomIBC = app.GetIBCDenom("channel-0", appparams.DefaultBondDenom).IBCDenom()
+	BaseDenomIBC     = app.GetIBCDenom("channel-0", sdk.DefaultBondDenom).IBCDenom()
+	BaseOsmoDenomIBC = app.GetIBCDenom("channel-0", "uosmo").IBCDenom()
 )
 
 type KeeperTestSuite struct {
