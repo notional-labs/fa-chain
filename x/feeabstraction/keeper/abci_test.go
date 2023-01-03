@@ -6,7 +6,7 @@ import (
 )
 
 // go test -v -run ^TestKeeperTestSuite/TestIdentifyChain$ github.com/notional-labs/fa-chain/x/feeabstraction/keeper
-func (s KeeperTestSuite) TestIdentifyChain() {
+func (s KeeperTestSuite) TestIdentifyChain() { //nolint:govet // it's fine to copy locks in a test
 	s.SetupTest()
 
 	// Send token

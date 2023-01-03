@@ -8,12 +8,14 @@ import (
 
 var index embed.FS
 
+//TODO: I think this may be a starport holdover.
+
 // Handler returns an http handler that servers OpenAPI console for an OpenAPI spec at specURL.
 func Handler(title, specURL string) http.HandlerFunc {
 	t, _ := template.ParseFS(index, "index.tpl")
 
 	return func(w http.ResponseWriter, req *http.Request) {
-		t.Execute(w, struct {
+		t.Execute(w, struct { //nolint:errcheck
 			Title string
 			URL   string
 		}{
