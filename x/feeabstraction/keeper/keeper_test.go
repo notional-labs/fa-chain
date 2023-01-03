@@ -14,7 +14,6 @@ import (
 	"github.com/notional-labs/fa-chain/app/apptesting"
 	"github.com/notional-labs/fa-chain/x/interchainquery/keeper"
 	"github.com/notional-labs/fa-chain/x/interchainquery/types"
-	osmoparams "github.com/osmosis-labs/osmosis/v13/app/params"
 )
 
 const (
@@ -46,7 +45,7 @@ func (s *KeeperTestSuite) MockIBCTransferFromBtoA() error {
 	timeoutHeight := clienttypes.NewHeight(0, 110)
 
 	amount, _ := sdk.NewIntFromString("100000000") // 2^63 (one above int64)
-	coinToSendToA := sdk.NewCoin(osmoparams.DefaultBondDenom, amount)
+	coinToSendToA := sdk.NewCoin(app.OsmoDefaultBondDenom, amount)
 
 	// send from chainA to chainB
 	msg := transfertypes.NewMsgTransfer(s.TransferPath.EndpointB.ChannelConfig.PortID, s.TransferPath.EndpointB.ChannelID, coinToSendToA, s.HostChain.SenderAccount.GetAddress().String(), s.Chain.SenderAccount.GetAddress().String(), timeoutHeight, 0)

@@ -110,8 +110,6 @@ import (
 	"github.com/notional-labs/fa-chain/x/interchainquery"
 	interchainquerykeeper "github.com/notional-labs/fa-chain/x/interchainquery/keeper"
 	interchainquerytypes "github.com/notional-labs/fa-chain/x/interchainquery/types"
-
-	"github.com/osmosis-labs/osmosis/v13/x/gamm"
 )
 
 const (
@@ -164,7 +162,6 @@ var (
 		monitoringp.AppModuleBasic{},
 		feeabstraction.AppModuleBasic{},
 		interchainquery.AppModuleBasic{},
-		gamm.AppModuleBasic{},
 	)
 
 	// module account permissions
@@ -494,10 +491,10 @@ func New(
 		banktypes.ModuleName,
 		govtypes.ModuleName,
 		crisistypes.ModuleName,
+		feeabstractiontypes.ModuleName,
 		genutiltypes.ModuleName,
 		feegrant.ModuleName,
 		paramstypes.ModuleName,
-		feeabstractiontypes.ModuleName,
 		interchainquerytypes.ModuleName,
 	)
 
@@ -513,6 +510,7 @@ func New(
 		slashingtypes.ModuleName,
 		vestingtypes.ModuleName,
 		minttypes.ModuleName,
+		feeabstractiontypes.ModuleName,
 		genutiltypes.ModuleName,
 		evidencetypes.ModuleName,
 		feegrant.ModuleName,
@@ -521,7 +519,6 @@ func New(
 		ibchost.ModuleName,
 		ibctransfertypes.ModuleName,
 		icatypes.ModuleName,
-		feeabstractiontypes.ModuleName,
 		interchainquerytypes.ModuleName,
 	)
 
@@ -544,13 +541,13 @@ func New(
 		crisistypes.ModuleName,
 		ibchost.ModuleName,
 		icatypes.ModuleName,
+		feeabstractiontypes.ModuleName,
 		genutiltypes.ModuleName,
 		evidencetypes.ModuleName,
 		paramstypes.ModuleName,
 		upgradetypes.ModuleName,
 		ibctransfertypes.ModuleName,
 		feegrant.ModuleName,
-		feeabstractiontypes.ModuleName,
 		interchainquerytypes.ModuleName,
 	)
 

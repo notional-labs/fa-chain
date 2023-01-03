@@ -25,7 +25,6 @@ import (
 	"github.com/notional-labs/fa-chain/app"
 	appparams "github.com/notional-labs/fa-chain/app/params"
 	osmoapp "github.com/osmosis-labs/osmosis/v13/app"
-	osmoparams "github.com/osmosis-labs/osmosis/v13/app/params"
 )
 
 var (
@@ -153,7 +152,7 @@ func (s *AppTestHelper) CreateTransferChannel(hostChainID string) {
 
 	// fund accounts on both chain
 	s.FundAppAccount(s.Chain.SenderAccount.GetAddress(), sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewIntFromUint64(1000000000000)))
-	s.FundHostAppAccount(s.HostChain.SenderAccount.GetAddress(), sdk.NewCoin(osmoparams.DefaultBondDenom, sdk.NewIntFromUint64(1000000000000)))
+	s.FundHostAppAccount(s.HostChain.SenderAccount.GetAddress(), sdk.NewCoin(app.OsmoDefaultBondDenom, sdk.NewIntFromUint64(1000000000000)))
 
 	// Finally confirm the channel was setup properly
 	s.Require().Equal(ibctesting.FirstClientID, s.TransferPath.EndpointA.ClientID, "chain clientID")

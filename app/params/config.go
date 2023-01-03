@@ -13,7 +13,7 @@ const (
 	// cosmos-sdk/types/coin.go
 	HumanCoinUnit = "fac"
 	BaseCoinUnit  = "ufac"
-	OsmoExponent  = 6
+	Exponent      = 6
 
 	DefaultBondDenom = BaseCoinUnit
 
@@ -45,7 +45,7 @@ func RegisterDenoms() {
 	if err != nil {
 		panic(err)
 	}
-	err = sdk.RegisterDenom(BaseCoinUnit, sdk.NewDecWithPrec(1, OsmoExponent))
+	err = sdk.RegisterDenom(BaseCoinUnit, sdk.NewDecWithPrec(1, Exponent))
 	if err != nil {
 		panic(err)
 	}

@@ -15,9 +15,12 @@ import (
 
 	appparams "github.com/notional-labs/fa-chain/app/params"
 	osmoapp "github.com/osmosis-labs/osmosis/v13/app"
-	osmoparams "github.com/osmosis-labs/osmosis/v13/app/params"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
 	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
+)
+
+const (
+	OsmoDefaultBondDenom = "uosmo"
 )
 
 func init() {
@@ -107,7 +110,7 @@ func OsmoGenesisStateWithPools(app *osmoapp.OsmosisApp) osmoapp.GenesisState {
 		},
 		{
 			Weight: sdk.NewInt(1),
-			Token:  sdk.NewInt64Coin(osmoparams.DefaultBondDenom, 1000000000),
+			Token:  sdk.NewInt64Coin(OsmoDefaultBondDenom, 1000000000),
 		},
 	}, "", time.Now())
 
@@ -116,7 +119,7 @@ func OsmoGenesisStateWithPools(app *osmoapp.OsmosisApp) osmoapp.GenesisState {
 		Pools:          []*codectypes.Any{any},
 		NextPoolNumber: 2,
 		Params: gammtypes.Params{
-			PoolCreationFee: sdk.Coins{sdk.NewInt64Coin(osmoparams.DefaultBondDenom, 1000_000_000)},
+			PoolCreationFee: sdk.Coins{sdk.NewInt64Coin(OsmoDefaultBondDenom, 1000_000_000)},
 		},
 	}
 	gen[gammtypes.ModuleName] = app.AppCodec().MustMarshalJSON(&gammGen)

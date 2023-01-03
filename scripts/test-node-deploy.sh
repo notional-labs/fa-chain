@@ -40,7 +40,7 @@ fi
 if [ $WILL_CONTINUE -eq 1 ];
 then
     # Start the node (remove the --pruning=nothing flag if historical queries are not needed)
-    fachaind start --pruning=nothing --log_level $LOGLEVEL --minimum-gas-prices=0.0001ufa
+    fachaind start --pruning=nothing --log_level $LOGLEVEL --minimum-gas-prices=0.0001ufac
     exit 1;
 fi
 
@@ -75,11 +75,11 @@ echo >&1 "\n"
 fachaind init $MONIKER --chain-id $CHAINID
 
 # Change parameter token denominations to ufa
-cat $HOME/.fachain/config/genesis.json | jq '.app_state["staking"]["params"]["bond_denom"]="ufa"' > $HOME/.fachain/config/tmp_genesis.json && mv $HOME/.fachain/config/tmp_genesis.json $HOME/.fachain/config/genesis.json
-cat $HOME/.fachain/config/genesis.json | jq '.app_state["crisis"]["constant_fee"]["denom"]="ufa"' > $HOME/.fachain/config/tmp_genesis.json && mv $HOME/.fachain/config/tmp_genesis.json $HOME/.fachain/config/genesis.json
-cat $HOME/.fachain/config/genesis.json | jq '.app_state["gov"]["deposit_params"]["min_deposit"][0]["denom"]="ufa"' > $HOME/.fachain/config/tmp_genesis.json && mv $HOME/.fachain/config/tmp_genesis.json $HOME/.fachain/config/genesis.json
-cat $HOME/.fachain/config/genesis.json | jq '.app_state["mint"]["params"]["mint_denom"]="ufa"' > $HOME/.fachain/config/tmp_genesis.json && mv $HOME/.fachain/config/tmp_genesis.json $HOME/.fachain/config/genesis.json
-
+cat $HOME/.fachain/config/genesis.json | jq '.app_state["staking"]["params"]["bond_denom"]="ufac"' > $HOME/.fachain/config/tmp_genesis.json && mv $HOME/.fachain/config/tmp_genesis.json $HOME/.fachain/config/genesis.json
+cat $HOME/.fachain/config/genesis.json | jq '.app_state["crisis"]["constant_fee"]["denom"]="ufac"' > $HOME/.fachain/config/tmp_genesis.json && mv $HOME/.fachain/config/tmp_genesis.json $HOME/.fachain/config/genesis.json
+cat $HOME/.fachain/config/genesis.json | jq '.app_state["gov"]["deposit_params"]["min_deposit"][0]["denom"]="ufac"' > $HOME/.fachain/config/tmp_genesis.json && mv $HOME/.fachain/config/tmp_genesis.json $HOME/.fachain/config/genesis.json
+cat $HOME/.fachain/config/genesis.json | jq '.app_state["mint"]["params"]["mint_denom"]="ufac"' > $HOME/.fachain/config/tmp_genesis.json && mv $HOME/.fachain/config/tmp_genesis.json $HOME/.fachain/config/genesis.json
+cat $HOME/.fachain/config/genesis.json | jq '.app_state["feeabstraction"]["base_denom"]="ufac"' > $HOME/.fachain/config/tmp_genesis.json && mv $HOME/.fachain/config/tmp_genesis.json $HOME/.fachain/config/genesis.json
 # Set gas limit in genesis
 # cat $HOME/.fachain/config/genesis.json | jq '.consensus_params["block"]["max_gas"]="10000000"' > $HOME/.fachain/config/tmp_genesis.json && mv $HOME/.fachain/config/tmp_genesis.json $HOME/.fachain/config/genesis.json
 
@@ -89,10 +89,10 @@ toml set --toml-path $HOME/.fachain/config/app.toml api.enable true
 toml set --toml-path $HOME/.fachain/config/app.toml api.address tcp://0.0.0.0:1310
 
 # Allocate genesis accounts (cosmos formatted addresses)
-fachaind add-genesis-account $KEY 1000000000000ufa --keyring-backend $KEYRING
+fachaind add-genesis-account $KEY 1000000000000ufac --keyring-backend $KEYRING
 
 # Sign genesis transaction
-fachaind gentx $KEY 1000000ufa --keyring-backend $KEYRING --chain-id $CHAINID
+fachaind gentx $KEY 1000000ufac --keyring-backend $KEYRING --chain-id $CHAINID
 
 # Collect genesis tx
 fachaind collect-gentxs
@@ -101,4 +101,4 @@ fachaind collect-gentxs
 fachaind validate-genesis
 
 # Start the node (remove the --pruning=nothing flag if historical queries are not needed)
-fachaind start --pruning=nothing --log_level $LOGLEVEL --minimum-gas-prices=0.0001ufa --p2p.laddr tcp://0.0.0.0:2280 --rpc.laddr tcp://0.0.0.0:2281 --grpc.address 0.0.0.0:2282 --grpc-web.address 0.0.0.0:2283
+fachaind start --pruning=nothing --log_level $LOGLEVEL --minimum-gas-prices=0.0001ufac --p2p.laddr tcp://0.0.0.0:2280 --rpc.laddr tcp://0.0.0.0:2281 --grpc.address 0.0.0.0:2282 --grpc-web.address 0.0.0.0:2283
