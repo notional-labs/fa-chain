@@ -26,7 +26,7 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 		WithInterfaceRegistry(encodingConfig.InterfaceRegistry).
 		WithTxConfig(encodingConfig.TxConfig).
 		WithLegacyAmino(encodingConfig.Amino).
-		WithJSONCodec(encodingConfig.Marshaler)
+		WithCodec(encodingConfig.Marshaler)
 
 	txBuilder := clientCtx.TxConfig.NewTxBuilder()
 

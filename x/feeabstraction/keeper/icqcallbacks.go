@@ -83,7 +83,7 @@ func PoolCallBack(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) 
 
 	// empty query
 	if len(poolRes.Pools) == 0 {
-		k.Logger(ctx).Info(fmt.Sprint("Empty pool response"))
+		k.Logger(ctx).Info("Empty pool response")
 		return nil
 	}
 
