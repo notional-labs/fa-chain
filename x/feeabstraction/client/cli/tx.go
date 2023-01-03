@@ -20,7 +20,6 @@ const (
 	listSeparator              = ","
 )
 
-// GetTxCmd returns the transaction commands for this module
 func GetTxCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:                        types.ModuleName,
@@ -29,8 +28,6 @@ func GetTxCmd() *cobra.Command {
 		SuggestionsMinimumDistance: 2,
 		RunE:                       client.ValidateCmd,
 	}
-
-	// this line is used by starport scaffolding # 1
 
 	return cmd
 }
