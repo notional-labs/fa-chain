@@ -7,7 +7,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	// "github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/notional-labs/fa-chain/x/feeabstraction/types"
 )
 
@@ -20,7 +19,6 @@ const (
 	listSeparator              = ","
 )
 
-// GetTxCmd returns the transaction commands for this module
 func GetTxCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:                        types.ModuleName,
@@ -29,8 +27,6 @@ func GetTxCmd() *cobra.Command {
 		SuggestionsMinimumDistance: 2,
 		RunE:                       client.ValidateCmd,
 	}
-
-	// this line is used by starport scaffolding # 1
 
 	return cmd
 }
