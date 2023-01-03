@@ -30,8 +30,8 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/nghuyenthevinh2000/fa-chain/app"
-	appparams "github.com/nghuyenthevinh2000/fa-chain/app/params"
+	"github.com/notional-labs/fa-chain/app"
+	appparams "github.com/notional-labs/fa-chain/app/params"
 )
 
 type (

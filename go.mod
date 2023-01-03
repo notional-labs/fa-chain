@@ -1,4 +1,4 @@
-module github.com/nghuyenthevinh2000/fa-chain
+module github.com/notional-labs/fa-chain
 
 go 1.18
 

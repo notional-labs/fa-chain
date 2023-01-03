@@ -11,8 +11,8 @@ import (
 	"github.com/spf13/cast"
 	"github.com/tendermint/tendermint/libs/log"
 
-	"github.com/nghuyenthevinh2000/fa-chain/utils"
-	"github.com/nghuyenthevinh2000/fa-chain/x/interchainquery/types"
+	"github.com/notional-labs/fa-chain/utils"
+	"github.com/notional-labs/fa-chain/x/interchainquery/types"
 )
 
 // Keeper of this module maintains collections of registered zones.

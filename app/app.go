@@ -83,7 +83,7 @@ import (
 	ibchost "github.com/cosmos/ibc-go/v3/modules/core/24-host"
 	ibckeeper "github.com/cosmos/ibc-go/v3/modules/core/keeper"
 	ibctesting "github.com/cosmos/ibc-go/v3/testing"
-	appparams "github.com/nghuyenthevinh2000/fa-chain/app/params"
+	appparams "github.com/notional-labs/fa-chain/app/params"
 
 	ica "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts"
 	icacontroller "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/controller"
@@ -102,14 +102,14 @@ import (
 	tmos "github.com/tendermint/tendermint/libs/os"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/nghuyenthevinh2000/fa-chain/docs"
+	"github.com/notional-labs/fa-chain/docs"
 
-	feeabstraction "github.com/nghuyenthevinh2000/fa-chain/x/feeabstraction"
-	feeabstractionkeeper "github.com/nghuyenthevinh2000/fa-chain/x/feeabstraction/keeper"
-	feeabstractiontypes "github.com/nghuyenthevinh2000/fa-chain/x/feeabstraction/types"
-	"github.com/nghuyenthevinh2000/fa-chain/x/interchainquery"
-	interchainquerykeeper "github.com/nghuyenthevinh2000/fa-chain/x/interchainquery/keeper"
-	interchainquerytypes "github.com/nghuyenthevinh2000/fa-chain/x/interchainquery/types"
+	feeabstraction "github.com/notional-labs/fa-chain/x/feeabstraction"
+	feeabstractionkeeper "github.com/notional-labs/fa-chain/x/feeabstraction/keeper"
+	feeabstractiontypes "github.com/notional-labs/fa-chain/x/feeabstraction/types"
+	"github.com/notional-labs/fa-chain/x/interchainquery"
+	interchainquerykeeper "github.com/notional-labs/fa-chain/x/interchainquery/keeper"
+	interchainquerytypes "github.com/notional-labs/fa-chain/x/interchainquery/types"
 
 	"github.com/osmosis-labs/osmosis/v13/x/gamm"
 )
@@ -173,15 +173,16 @@ var (
 
 	// module account permissions
 	maccPerms = map[string][]string{
-		authtypes.FeeCollectorName:      nil,
-		distrtypes.ModuleName:           nil,
-		minttypes.ModuleName:            {authtypes.Minter},
-		stakingtypes.BondedPoolName:     {authtypes.Burner, authtypes.Staking},
-		stakingtypes.NotBondedPoolName:  {authtypes.Burner, authtypes.Staking},
-		govtypes.ModuleName:             {authtypes.Burner},
-		ibctransfertypes.ModuleName:     {authtypes.Minter, authtypes.Burner},
-		interchainquerytypes.ModuleName: nil,
-		icatypes.ModuleName:             nil,
+		authtypes.FeeCollectorName:                    nil,
+		distrtypes.ModuleName:                         nil,
+		minttypes.ModuleName:                          {authtypes.Minter},
+		stakingtypes.BondedPoolName:                   {authtypes.Burner, authtypes.Staking},
+		stakingtypes.NotBondedPoolName:                {authtypes.Burner, authtypes.Staking},
+		govtypes.ModuleName:                           {authtypes.Burner},
+		ibctransfertypes.ModuleName:                   {authtypes.Minter, authtypes.Burner},
+		interchainquerytypes.ModuleName:               nil,
+		icatypes.ModuleName:                           nil,
+		feeabstractiontypes.NonNativeFeeCollectorName: nil,
 	}
 )
 
@@ -402,6 +403,8 @@ func New(
 		app.GetSubspace(feeabstractiontypes.ModuleName),
 		app.InterchainqueryKeeper,
 		app.TransferKeeper,
+		authtypes.FeeCollectorName,
+		feeabstractiontypes.NonNativeFeeCollectorName,
 	)
 	faModule := feeabstraction.NewAppModule(appCodec, app.FAKeeper, app.AccountKeeper, app.BankKeeper)
 
@@ -575,18 +578,15 @@ func New(
 	app.SetInitChainer(app.InitChainer)
 	app.SetBeginBlocker(app.BeginBlocker)
 
-	anteHandler, err := ante.NewAnteHandler(
-		ante.HandlerOptions{
-			AccountKeeper:   app.AccountKeeper,
-			BankKeeper:      app.BankKeeper,
-			SignModeHandler: encodingConfig.TxConfig.SignModeHandler(),
-			FeegrantKeeper:  app.FeeGrantKeeper,
-			SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
-		},
+	anteHandler := NewAnteHandler(
+		app.AccountKeeper,
+		app.BankKeeper,
+		app.FeeGrantKeeper,
+		&app.FAKeeper,
+		ante.DefaultSigVerificationGasConsumer,
+		encodingConfig.TxConfig.SignModeHandler(),
+		app.IBCKeeper,
 	)
-	if err != nil {
-		panic(err)
-	}
 
 	app.SetAnteHandler(anteHandler)
 	app.SetEndBlocker(app.EndBlocker)

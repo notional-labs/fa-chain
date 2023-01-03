@@ -10,11 +10,10 @@ import (
 	clienttypes "github.com/cosmos/ibc-go/v3/modules/core/02-client/types"
 	ibctesting "github.com/cosmos/ibc-go/v3/testing"
 
-	"github.com/nghuyenthevinh2000/fa-chain/app"
-	"github.com/nghuyenthevinh2000/fa-chain/app/apptesting"
-	appparams "github.com/nghuyenthevinh2000/fa-chain/app/params"
-	"github.com/nghuyenthevinh2000/fa-chain/x/interchainquery/keeper"
-	"github.com/nghuyenthevinh2000/fa-chain/x/interchainquery/types"
+	"github.com/notional-labs/fa-chain/app"
+	"github.com/notional-labs/fa-chain/app/apptesting"
+	"github.com/notional-labs/fa-chain/x/interchainquery/keeper"
+	"github.com/notional-labs/fa-chain/x/interchainquery/types"
 	osmoparams "github.com/osmosis-labs/osmosis/v13/app/params"
 )
 
@@ -23,7 +22,8 @@ const (
 )
 
 var (
-	BaseDenomIBC = app.GetIBCDenom("channel-0", appparams.DefaultBondDenom).IBCDenom()
+	BaseDenomIBC     = app.GetIBCDenom("channel-0", sdk.DefaultBondDenom).IBCDenom()
+	BaseOsmoDenomIBC = app.GetIBCDenom("channel-0", "uosmo").IBCDenom()
 )
 
 type KeeperTestSuite struct {

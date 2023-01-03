@@ -13,7 +13,7 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
 
-	appparams "github.com/nghuyenthevinh2000/fa-chain/app/params"
+	appparams "github.com/notional-labs/fa-chain/app/params"
 	osmoapp "github.com/osmosis-labs/osmosis/v13/app"
 	osmoparams "github.com/osmosis-labs/osmosis/v13/app/params"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
@@ -59,7 +59,7 @@ func InitTestApp(initChain bool) *App {
 }
 
 // Initializes a new Stride App casted as a TestingApp for IBC support
-func InitStrideIBCTestingApp() (ibctesting.TestingApp, map[string]json.RawMessage) {
+func InitIBCTestingApp() (ibctesting.TestingApp, map[string]json.RawMessage) {
 	app := InitTestApp(false)
 	return ibctesting.TestingApp(app), NewDefaultGenesisState(app.appCodec)
 }
@@ -95,7 +95,7 @@ func OsmoGenesisStateWithPools(app *osmoapp.OsmosisApp) osmoapp.GenesisState {
 	gen := osmoapp.NewDefaultGenesisState()
 
 	// ufac ibc format
-	ibcDenom := GetIBCDenom("channel-0", appparams.DefaultBondDenom).IBCDenom()
+	ibcDenom := GetIBCDenom("channel-0", sdk.DefaultBondDenom).IBCDenom()
 
 	balancerPool, _ := balancer.NewBalancerPool(1, balancer.PoolParams{
 		SwapFee: sdk.NewDecWithPrec(1, 2),

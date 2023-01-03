@@ -4,8 +4,8 @@ import (
 	"os"
 
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
-	"github.com/nghuyenthevinh2000/fa-chain/app"
-	"github.com/nghuyenthevinh2000/fa-chain/cmd/fachaind/cmd"
+	"github.com/notional-labs/fa-chain/app"
+	"github.com/notional-labs/fa-chain/cmd/fachaind/cmd"
 )
 
 func main() {

@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	icqtypes "github.com/nghuyenthevinh2000/fa-chain/x/interchainquery/types"
+	icqtypes "github.com/notional-labs/fa-chain/x/interchainquery/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 	twapquery "github.com/osmosis-labs/osmosis/v13/x/twap/client/queryproto"
 )

@@ -3,7 +3,7 @@ package fachain.feeabstraction;
 
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/nghuyenthevinh2000/fa-chain/x/feeabstraction/types";
+option go_package = "github.com/notional-labs/fa-chain/x/feeabstraction/types";
 
 // Params defines the parameters for the module.
 message Params {

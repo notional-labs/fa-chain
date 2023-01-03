@@ -2,7 +2,7 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/nghuyenthevinh2000/fa-chain/x/feeabstraction/types"
+	"github.com/notional-labs/fa-chain/x/feeabstraction/types"
 )
 
 // GetParams get all parameters as types.Params

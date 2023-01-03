@@ -8,5 +8,7 @@ import (
 
 // x/feeabstraction module sentinel errors
 var (
-	ErrSample = sdkerrors.Register(ModuleName, 1100, "sample error")
+	ErrInvalidFeeToken = sdkerrors.Register(ModuleName, 1, "invalid fee token")
+	ErrTooManyFeeCoins = sdkerrors.Register(ModuleName, 2, "too many fee coins. only accepts fees in one denom")
+	ErrNoBaseDenom     = sdkerrors.Register(ModuleName, 3, "no base denom was set")
 )

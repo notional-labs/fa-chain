@@ -1,7 +1,7 @@
 package keeper
 
 import (
-	"github.com/nghuyenthevinh2000/fa-chain/x/feeabstraction/types"
+	"github.com/notional-labs/fa-chain/x/feeabstraction/types"
 )
 
 type msgServer struct {

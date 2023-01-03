@@ -9,7 +9,7 @@ import (
 	_ "github.com/stretchr/testify/suite"
 	"github.com/tendermint/tendermint/proto/tendermint/crypto"
 
-	"github.com/nghuyenthevinh2000/fa-chain/x/interchainquery/types"
+	"github.com/notional-labs/fa-chain/x/interchainquery/types"
 )
 
 const (

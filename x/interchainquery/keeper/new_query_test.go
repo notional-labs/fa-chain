@@ -3,7 +3,7 @@ package keeper_test
 import (
 	_ "github.com/stretchr/testify/suite"
 
-	icqtypes "github.com/nghuyenthevinh2000/fa-chain/x/interchainquery/types"
+	icqtypes "github.com/notional-labs/fa-chain/x/interchainquery/types"
 )
 
 type NewQueryTestCase struct {
