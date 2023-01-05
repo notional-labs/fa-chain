@@ -7,24 +7,22 @@ import (
 	transfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v3/modules/core/02-client/types"
 	ibctesting "github.com/cosmos/ibc-go/v3/testing"
-	"github.com/notional-labs/fa-chain/x/feeabstraction/keeper"
 )
 
 func (s *KeeperTestSuite) TestSendIBCFee() {
 	s.SetupTest()
-	feeAccountOwner := fmt.Sprintf("%s.%s", keeper.HOST_ZONE_CHAIN_ID, "FEE")
+	feeAccountOwner := fmt.Sprintf("%s.%s", HostChainId, "FEE")
 	s.CreateICAChannel(feeAccountOwner)
+	s.MockIBCTransferFromBtoA()
 
-	// fund nn fee decorator (assume that TestAccs[2] is nn fee decorator)
-	ibcDenom := s.GetIBCDenomTrace("uosmo")
-	s.FundAppAccount(s.TestAccs[2], sdk.NewInt64Coin(ibcDenom.IBCDenom(), 10000))
-
+	// assume that s.Chain.SenderAccount is nn fee decorator
 	// send from chainA to chainB
-	nnFeeAddress := s.TestAccs[2]
+	nnFeeAddress := s.Chain.SenderAccount.GetAddress()
 	tokens := s.App.BankKeeper.GetAllBalances(s.Ctx, nnFeeAddress)
 
 	hostFeeAddress := s.App.FAKeeper.GetFeeICAAddress(s.Ctx)
-	fmt.Printf("hostFeeAddress = %v \n", hostFeeAddress)
+	acc, err := sdk.AccAddressFromBech32(hostFeeAddress)
+	s.Require().NoError(err)
 
 	for _, token := range tokens {
 		timeout, err := s.App.FAKeeper.GetTtl(s.Ctx)
@@ -43,4 +41,6 @@ func (s *KeeperTestSuite) TestSendIBCFee() {
 	}
 
 	// check if ibc denom is on hostFeeAddress
+	coins := s.HostApp.BankKeeper.GetAllBalances(s.HostCtx, acc)
+	s.Require().Equal(sdk.NewIntFromUint64(100000000), coins.AmountOf("uosmo"))
 }
