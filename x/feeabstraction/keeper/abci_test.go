@@ -9,8 +9,7 @@ func (s KeeperTestSuite) TestIdentifyChain() { //nolint:govet // it's fine to co
 	s.SetupTest()
 
 	// Send token
-	err := s.MockIBCTransferFromBtoA()
-	s.Suite.Require().NoError(err)
+	s.MockIBCTransferFromBtoA()
 	// check if account on A has coin
 	amt := s.App.BankKeeper.GetBalance(s.Ctx, s.Chain.SenderAccount.GetAddress(), BaseDenomIBC)
 	s.Suite.Require().NotNil(amt)

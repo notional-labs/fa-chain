@@ -7,7 +7,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	ibctransfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
 	"github.com/notional-labs/fa-chain/x/feeabstraction/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
@@ -34,6 +33,12 @@ func (k Keeper) BeginBlocker(ctx sdk.Context) {
 		if strings.Contains(denomTrace.GetPath(), osmo_juno_channel_id) {
 			k.Logger(ctx).Info("Registering token pair")
 			k.SetDenomTrack(ctx, denomTrace.GetBaseDenom(), denomTrace.IBCDenom())
+		}
+
+		feeAccount := types.GetFeeICAAccountOwner(HOST_ZONE_CHAIN_ID)
+		if err := k.IcaControllerKeeper.RegisterInterchainAccount(ctx, JUNO_OSMO_CONNECTION_ID, feeAccount); err != nil {
+			k.Logger(ctx).Error(fmt.Sprintf("unable to register fee account, err: %s", err.Error()))
+			return true
 		}
 
 		return true
@@ -75,8 +80,8 @@ func (k Keeper) BeginBlocker(ctx sdk.Context) {
 		if err := k.icqKeeper.MakeRequest(ctx,
 			types.ModuleName,
 			ICQCallbackID_Pool,
-			host_zone_chain_id,
-			juno_osmo_connection_id,
+			HOST_ZONE_CHAIN_ID,
+			JUNO_OSMO_CONNECTION_ID,
 			types.POOL_STORE_QUERY,
 			data,
 			ttl,
@@ -127,8 +132,8 @@ func (k Keeper) EndBlocker(ctx sdk.Context) {
 		if err := k.icqKeeper.MakeRequest(ctx,
 			types.ModuleName,
 			ICQCallbackID_FeeRate,
-			host_zone_chain_id,
-			juno_osmo_connection_id,
+			HOST_ZONE_CHAIN_ID,
+			JUNO_OSMO_CONNECTION_ID,
 			types.TWAP_STORE_QUERY,
 			data,
 			ttl,
@@ -139,4 +144,15 @@ func (k Keeper) EndBlocker(ctx sdk.Context) {
 
 		return true
 	})
+
+	// temporary condition for coin
+	addr := k.accountKeeper.GetModuleAddress(types.NonNativeFeeCollectorName)
+	coins := k.bankKeeper.GetAllBalances(ctx, addr)
+	if !coins.IsZero() {
+		k.Logger(ctx).Info("Execute transfering all ibc tokens from nn fee collector")
+		//execute cross - chain swap
+		if err := k.SendIBCFee(ctx); err != nil {
+			k.Logger(ctx).Error("failed to ibc transfer fee for nn fee collector", "error", err)
+		}
+	}
 }

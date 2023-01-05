@@ -38,7 +38,7 @@ func (s *KeeperTestSuite) SetupMsgSubmitQueryResponse() MsgSubmitQueryResponseTe
 
 	_, addr, _ := bech32.DecodeAndConvert(s.TestAccs[0].String())
 	data := banktypes.CreateAccountBalancesPrefix(addr)
-	// save the query to Stride state, so it can be retrieved in the response
+	// save the query to fachain state, so it can be retrieved in the response
 	query := types.Query{
 		Id:           expectedId,
 		CallbackId:   "withdrawalbalance",

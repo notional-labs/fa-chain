@@ -41,7 +41,7 @@ func (s *KeeperTestSuite) SetupTest() {
 // ====== IBC ======
 
 // sending ufa from osmosis to fachain
-func (s *KeeperTestSuite) MockIBCTransferFromBtoA() error {
+func (s *KeeperTestSuite) MockIBCTransferFromBtoA() {
 	timeoutHeight := clienttypes.NewHeight(0, 110)
 
 	amount, _ := sdk.NewIntFromString("100000000") // 2^63 (one above int64)
@@ -50,21 +50,14 @@ func (s *KeeperTestSuite) MockIBCTransferFromBtoA() error {
 	// send from chainA to chainB
 	msg := transfertypes.NewMsgTransfer(s.TransferPath.EndpointB.ChannelConfig.PortID, s.TransferPath.EndpointB.ChannelID, coinToSendToA, s.HostChain.SenderAccount.GetAddress().String(), s.Chain.SenderAccount.GetAddress().String(), timeoutHeight, 0)
 	res, err := s.HostChain.SendMsgs(msg)
-	if err != nil {
-		return err
-	}
+	s.Require().NoError(err)
 
 	packet, err := ibctesting.ParsePacketFromEvents(res.GetEvents())
-	if err != nil {
-		return err
-	}
+	s.Require().NoError(err)
 
 	// relay send
-	if err = s.TransferPath.RelayPacket(packet); err != nil {
-		return err
-	}
-
-	return nil
+	err = s.TransferPath.RelayPacket(packet)
+	s.Require().NoError(err)
 }
 
 func (s *KeeperTestSuite) GetMsgServer() types.MsgServer {

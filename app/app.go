@@ -110,10 +110,12 @@ import (
 	"github.com/notional-labs/fa-chain/x/interchainquery"
 	interchainquerykeeper "github.com/notional-labs/fa-chain/x/interchainquery/keeper"
 	interchainquerytypes "github.com/notional-labs/fa-chain/x/interchainquery/types"
+
+	epoch "github.com/osmosis-labs/osmosis/v13/x/epochs"
 )
 
 const (
-	AccountAddressPrefix = "fa"
+	AccountAddressPrefix = "fac"
 	Name                 = "fachain"
 )
 
@@ -162,6 +164,7 @@ var (
 		monitoringp.AppModuleBasic{},
 		feeabstraction.AppModuleBasic{},
 		interchainquery.AppModuleBasic{},
+		epoch.AppModuleBasic{},
 	)
 
 	// module account permissions
@@ -235,6 +238,7 @@ type App struct {
 	ScopedTransferKeeper      capabilitykeeper.ScopedKeeper
 	ScopedICAControllerKeeper capabilitykeeper.ScopedKeeper
 	ScopedICAHostKeeper       capabilitykeeper.ScopedKeeper
+	ScopedFAKeeper            capabilitykeeper.ScopedKeeper
 
 	FAKeeper              feeabstractionkeeper.Keeper
 	InterchainqueryKeeper interchainquerykeeper.Keeper
@@ -386,6 +390,7 @@ func New(
 	app.InterchainqueryKeeper = interchainquerykeeper.NewKeeper(appCodec, keys[interchainquerytypes.StoreKey], app.IBCKeeper)
 	interchainQueryModule := interchainquery.NewAppModule(appCodec, app.InterchainqueryKeeper)
 
+	scopedFAKeeper := app.CapabilityKeeper.ScopeToModule(feeabstractiontypes.ModuleName)
 	app.FAKeeper = *feeabstractionkeeper.NewKeeper(
 		appCodec,
 		keys[feeabstractiontypes.StoreKey],
@@ -393,6 +398,11 @@ func New(
 		app.GetSubspace(feeabstractiontypes.ModuleName),
 		app.InterchainqueryKeeper,
 		app.TransferKeeper,
+		app.ICAControllerKeeper,
+		*app.IBCKeeper,
+		app.BankKeeper,
+		app.AccountKeeper,
+		scopedFAKeeper,
 		authtypes.FeeCollectorName,
 		feeabstractiontypes.NonNativeFeeCollectorName,
 	)
@@ -419,6 +429,7 @@ func New(
 	// - ICA
 	// - base app
 	var icamiddlewareStack ibcporttypes.IBCModule
+	icamiddlewareStack = feeabstraction.NewIBCModule(app.FAKeeper)
 	icamiddlewareStack = icacontroller.NewIBCModule(app.ICAControllerKeeper, icamiddlewareStack)
 	icaHostIBCModule := icahost.NewIBCModule(app.ICAHostKeeper)
 
@@ -430,7 +441,8 @@ func New(
 	ibcRouter.
 		AddRoute(ibctransfertypes.ModuleName, transferStack).
 		AddRoute(icacontrollertypes.SubModuleName, icamiddlewareStack).
-		AddRoute(icahosttypes.SubModuleName, icaHostIBCModule)
+		AddRoute(icahosttypes.SubModuleName, icaHostIBCModule).
+		AddRoute(feeabstractiontypes.ModuleName, icamiddlewareStack)
 	// Note, authentication module packets are routed to the top level of the middleware stack
 	app.IBCKeeper.SetRouter(ibcRouter)
 
@@ -587,6 +599,7 @@ func New(
 	app.ScopedTransferKeeper = scopedTransferKeeper
 	app.ScopedICAControllerKeeper = scopedICAControllerKeeper
 	app.ScopedICAHostKeeper = scopedICAHostKeeper
+	app.ScopedFAKeeper = scopedFAKeeper
 
 	return app
 }

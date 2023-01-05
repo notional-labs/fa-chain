@@ -8,16 +8,18 @@ import (
 	"github.com/spf13/cast"
 	"github.com/tendermint/tendermint/libs/log"
 
-	appparams "github.com/notional-labs/fa-chain/app/params"
-	"github.com/notional-labs/fa-chain/x/feeabstraction/types"
-	icqkeeper "github.com/notional-labs/fa-chain/x/interchainquery/keeper"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	icacontrollerkeeper "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/controller/keeper"
 	ibctransferkeeper "github.com/cosmos/ibc-go/v3/modules/apps/transfer/keeper"
+	ibckeeper "github.com/cosmos/ibc-go/v3/modules/core/keeper"
+	appparams "github.com/notional-labs/fa-chain/app/params"
+	"github.com/notional-labs/fa-chain/x/feeabstraction/types"
+	icqkeeper "github.com/notional-labs/fa-chain/x/interchainquery/keeper"
 )
 
 type (
@@ -28,6 +30,11 @@ type (
 		paramstore                paramtypes.Subspace
 		icqKeeper                 icqkeeper.Keeper
 		transferKeeper            ibctransferkeeper.Keeper
+		IcaControllerKeeper       icacontrollerkeeper.Keeper
+		IbcKeeper                 ibckeeper.Keeper
+		bankKeeper                types.BankKeeper
+		accountKeeper             types.AccountKeeper
+		scopedKeeper              capabilitykeeper.ScopedKeeper
 		feeCollectorName          string
 		nonNativeFeeCollectorName string
 	}
@@ -40,6 +47,11 @@ func NewKeeper(
 	ps paramtypes.Subspace,
 	icqKeeper icqkeeper.Keeper,
 	transferKeeper ibctransferkeeper.Keeper,
+	icaControllerKeeper icacontrollerkeeper.Keeper,
+	ibcKeeper ibckeeper.Keeper,
+	bankKeeper types.BankKeeper,
+	accountKeeper types.AccountKeeper,
+	scopedKeeper capabilitykeeper.ScopedKeeper,
 	feeCollectorName string,
 	nonNativeFeeCollectorName string,
 ) *Keeper {
@@ -55,6 +67,11 @@ func NewKeeper(
 		paramstore:                ps,
 		icqKeeper:                 icqKeeper,
 		transferKeeper:            transferKeeper,
+		IcaControllerKeeper:       icaControllerKeeper,
+		IbcKeeper:                 ibcKeeper,
+		bankKeeper:                bankKeeper,
+		accountKeeper:             accountKeeper,
+		scopedKeeper:              scopedKeeper,
 		feeCollectorName:          feeCollectorName,
 		nonNativeFeeCollectorName: nonNativeFeeCollectorName,
 	}

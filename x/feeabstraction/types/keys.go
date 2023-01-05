@@ -23,8 +23,14 @@ const (
 	NonNativeFeeCollectorName = "non_native_fee_collector"
 )
 
+// IBC events
+const (
+	AttributeKeyAck = "acknowledgement"
+)
+
 var (
 	BaseDenomKey = []byte{0x01}
+	FeeICAKey    = []byte{0x02}
 
 	StoreFeeRate    = []byte{0x11}
 	StoreDenomTrack = []byte{0x12}
