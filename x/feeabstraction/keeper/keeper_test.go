@@ -13,7 +13,7 @@ import (
 	"github.com/notional-labs/fa-chain/app"
 	"github.com/notional-labs/fa-chain/app/apptesting"
 	"github.com/notional-labs/fa-chain/x/interchainquery/keeper"
-	"github.com/notional-labs/fa-chain/x/interchainquery/types"
+	icqtypes "github.com/notional-labs/fa-chain/x/interchainquery/types"
 )
 
 const (
@@ -60,7 +60,7 @@ func (s *KeeperTestSuite) MockIBCTransferFromBtoA() {
 	s.Require().NoError(err)
 }
 
-func (s *KeeperTestSuite) GetMsgServer() types.MsgServer {
+func (s *KeeperTestSuite) GetMsgServer() icqtypes.MsgServer {
 	return keeper.NewMsgServerImpl(s.App.InterchainqueryKeeper)
 }
 
