@@ -65,7 +65,7 @@ func (im IBCModule) OnChanOpenAck(
 		ctx.Logger().Error(fmt.Sprintf("Expected to find an address for %s/%s", controllerConnectionId, portID))
 		return nil
 	}
-	ctx.Logger().Info(fmt.Sprintf("ICA adddress = %v \n", address))
+	ctx.Logger().Info(fmt.Sprintf("ICA adddress = %v", address))
 
 	// get host chain id from connection
 	// fetch counterparty connection

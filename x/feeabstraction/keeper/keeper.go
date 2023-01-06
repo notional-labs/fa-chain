@@ -19,6 +19,7 @@ import (
 	ibckeeper "github.com/cosmos/ibc-go/v3/modules/core/keeper"
 	appparams "github.com/notional-labs/fa-chain/app/params"
 	"github.com/notional-labs/fa-chain/x/feeabstraction/types"
+	icacallbackskeeper "github.com/notional-labs/fa-chain/x/icacallbacks/keeper"
 	icqkeeper "github.com/notional-labs/fa-chain/x/interchainquery/keeper"
 )
 
@@ -35,6 +36,7 @@ type (
 		bankKeeper                types.BankKeeper
 		accountKeeper             types.AccountKeeper
 		scopedKeeper              capabilitykeeper.ScopedKeeper
+		ICACallbacksKeeper        icacallbackskeeper.Keeper
 		feeCollectorName          string
 		nonNativeFeeCollectorName string
 	}
@@ -52,6 +54,7 @@ func NewKeeper(
 	bankKeeper types.BankKeeper,
 	accountKeeper types.AccountKeeper,
 	scopedKeeper capabilitykeeper.ScopedKeeper,
+	ICACallbacksKeeper icacallbackskeeper.Keeper,
 	feeCollectorName string,
 	nonNativeFeeCollectorName string,
 ) Keeper {
@@ -72,6 +75,7 @@ func NewKeeper(
 		bankKeeper:                bankKeeper,
 		accountKeeper:             accountKeeper,
 		scopedKeeper:              scopedKeeper,
+		ICACallbacksKeeper:        ICACallbacksKeeper,
 		feeCollectorName:          feeCollectorName,
 		nonNativeFeeCollectorName: nonNativeFeeCollectorName,
 	}

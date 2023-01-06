@@ -93,5 +93,9 @@ func (k Keeper) SendIBCFee(ctx sdk.Context) error {
 }
 
 // step 2: execute ICA swap
+func (k Keeper) ICASwap(ctx sdk.Context) error {
+
+	return nil
+}
 
 // step 3: execute ICA IBC transfer from Osmosis back to here
