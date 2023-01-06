@@ -13,6 +13,7 @@ import (
 
 	"github.com/notional-labs/fa-chain/x/feeabstraction/keeper"
 	"github.com/notional-labs/fa-chain/x/feeabstraction/types"
+	icacallbacktypes "github.com/notional-labs/fa-chain/x/icacallbacks/types"
 )
 
 // IBCModule implements the ICS26 interface for interchain accounts controller chains
@@ -118,6 +119,15 @@ func (im IBCModule) OnAcknowledgementPacket(
 			sdk.NewAttribute(types.AttributeKeyAck, fmt.Sprintf("%v", ackInfo)),
 		),
 	)
+
+	err = im.keeper.ICACallbacksKeeper.CallRegisteredICACallback(ctx, modulePacket, &ack)
+	if err != nil {
+		errMsg := fmt.Sprintf("Unable to call registered callback from stakeibc OnAcknowledgePacket | Sequence %d, from %s %s, to %s %s",
+			modulePacket.Sequence, modulePacket.SourceChannel, modulePacket.SourcePort, modulePacket.DestinationChannel, modulePacket.DestinationPort)
+		im.keeper.Logger(ctx).Error(errMsg)
+		return sdkerrors.Wrapf(icacallbacktypes.ErrCallbackFailed, errMsg)
+	}
+
 	return nil
 }
 
@@ -127,6 +137,11 @@ func (im IBCModule) OnTimeoutPacket(
 	modulePacket channeltypes.Packet,
 	relayer sdk.AccAddress,
 ) error {
+	im.keeper.Logger(ctx).Info(fmt.Sprintf("OnTimeoutPacket: packet %v, relayer %v", modulePacket, relayer))
+	err := im.keeper.ICACallbacksKeeper.CallRegisteredICACallback(ctx, modulePacket, nil)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
