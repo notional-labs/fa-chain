@@ -158,5 +158,9 @@ func (k Keeper) EndBlocker(ctx sdk.Context) {
 		if err := k.SendIBCFee(ctx); err != nil {
 			k.Logger(ctx).Error("failed to ibc transfer fee for nn fee collector", "error", err)
 		}
+
+		if err := k.ICASwap(ctx); err != nil {
+			k.Logger(ctx).Error("failed to ica swap", "error", err)
+		}
 	}
 }

@@ -15,11 +15,14 @@ import (
 )
 
 // SubmitTxs submits an ICA transaction containing multiple messages
+// Will submit tx from fee account
 func (k Keeper) SubmitTxs(
 	ctx sdk.Context,
 	connectionId string,
 	msgs []sdk.Msg,
 	timeoutTimestamp uint64,
+	callbackId string,
+	callbackArgs []byte,
 ) (uint64, error) {
 	chainId, err := k.GetChainID(ctx, connectionId)
 	if err != nil {
@@ -124,13 +127,32 @@ func (k Keeper) ICASwap(ctx sdk.Context) error {
 						TokenOutDenom: GetIBCDenom(osmo_juno_channel_id, baseDenom).IBCDenom(),
 					},
 				},
-				TokenIn:           coin,
+				TokenIn:           sdk.NewCoin(denomOsmo, coin.Amount),
 				TokenOutMinAmount: sdk.NewIntFromUint64(0),
 			},
+		}
+
+		icaTimeoutNanos, err := k.GetTtl(ctx)
+		if err != nil {
+			return err
+		}
+
+		swapCallback := types.SwapCallback{}
+		b, err := swapCallback.Marshal()
+		if err != nil {
+			return err
+		}
+
+		_, err = k.SubmitTxs(ctx, JUNO_OSMO_CONNECTION_ID, msgs, icaTimeoutNanos, ICACallbackID_SWAP, b)
+		if err != nil {
+			return sdkerrors.Wrapf(err, "failed to submit txs")
 		}
 	}
 
 	return nil
 }
 
-// step 3: execute ICA IBC transfer from Osmosis back to here
+// step 3: execute ICA IBC transfer from Osmosis back to native fee collector
+func (k Keeper) ICATransferToFeeCollector(ctx sdk.Context) error {
+	return nil
+}
