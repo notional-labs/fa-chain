@@ -637,6 +637,12 @@ func (app *App) LoadHeight(height int64) error {
 func (app *App) ModuleAccountAddrs() map[string]bool {
 	modAccAddrs := make(map[string]bool)
 	for acc := range maccPerms {
+		// enable send and receive on NonNativeFeeCollectorName
+		if acc == feeabstractiontypes.NonNativeFeeCollectorName {
+			modAccAddrs[authtypes.NewModuleAddress(acc).String()] = false
+			continue
+		}
+
 		modAccAddrs[authtypes.NewModuleAddress(acc).String()] = true
 	}
 
