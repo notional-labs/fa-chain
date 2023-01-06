@@ -364,9 +364,6 @@ func New(
 		app.IBCKeeper.ChannelKeeper, app.IBCKeeper.ChannelKeeper, &app.IBCKeeper.PortKeeper,
 		app.AccountKeeper, app.BankKeeper, scopedTransferKeeper,
 	)
-	var (
-		transferModule = transfer.NewAppModule(app.TransferKeeper)
-	)
 
 	// Create evidence Keeper for to register the IBC light client misbehaviour evidence route
 	evidenceKeeper := evidencekeeper.NewKeeper(
@@ -391,7 +388,8 @@ func New(
 	interchainQueryModule := interchainquery.NewAppModule(appCodec, app.InterchainqueryKeeper)
 
 	scopedFAKeeper := app.CapabilityKeeper.ScopeToModule(feeabstractiontypes.ModuleName)
-	app.FAKeeper = *feeabstractionkeeper.NewKeeper(
+	app.ScopedFAKeeper = scopedFAKeeper
+	app.FAKeeper = feeabstractionkeeper.NewKeeper(
 		appCodec,
 		keys[feeabstractiontypes.StoreKey],
 		keys[feeabstractiontypes.MemStoreKey],
@@ -440,8 +438,8 @@ func New(
 	ibcRouter := ibcporttypes.NewRouter()
 	ibcRouter.
 		AddRoute(ibctransfertypes.ModuleName, transferStack).
-		AddRoute(icacontrollertypes.SubModuleName, icamiddlewareStack).
 		AddRoute(icahosttypes.SubModuleName, icaHostIBCModule).
+		AddRoute(icacontrollertypes.SubModuleName, icamiddlewareStack).
 		AddRoute(feeabstractiontypes.ModuleName, icamiddlewareStack)
 	// Note, authentication module packets are routed to the top level of the middleware stack
 	app.IBCKeeper.SetRouter(ibcRouter)
@@ -476,7 +474,7 @@ func New(
 		evidence.NewAppModule(app.EvidenceKeeper),
 		ibc.NewAppModule(app.IBCKeeper),
 		params.NewAppModule(app.ParamsKeeper),
-		transferModule,
+		transfer.NewAppModule(app.TransferKeeper),
 		faModule,
 		interchainQueryModule,
 		icaModule,

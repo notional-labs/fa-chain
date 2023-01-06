@@ -35,17 +35,18 @@ func (k Keeper) BeginBlocker(ctx sdk.Context) {
 			k.SetDenomTrack(ctx, denomTrace.GetBaseDenom(), denomTrace.IBCDenom())
 		}
 
+		// putting ica registration behind ibc transfer ensures that connection on both parties are OPEN.
+		feeAccount := types.GetFeeICAAccountOwner(HOST_ZONE_CHAIN_ID)
+		_, exist := k.IcaControllerKeeper.GetInterchainAccountAddress(ctx, JUNO_OSMO_CONNECTION_ID, feeAccount)
+		if !exist {
+			if err := k.IcaControllerKeeper.RegisterInterchainAccount(ctx, JUNO_OSMO_CONNECTION_ID, feeAccount); err != nil {
+				k.Logger(ctx).Error(fmt.Sprintf("unable to register fee account, err: %s", err.Error()))
+				return true
+			}
+		}
+
 		return true
 	})
-
-	feeAccount := types.GetFeeICAAccountOwner(HOST_ZONE_CHAIN_ID)
-	_, connexist := k.IbcKeeper.ConnectionKeeper.GetConnection(ctx, JUNO_OSMO_CONNECTION_ID)
-	_, exist := k.IcaControllerKeeper.GetInterchainAccountAddress(ctx, JUNO_OSMO_CONNECTION_ID, feeAccount)
-	if connexist && !exist {
-		if err := k.IcaControllerKeeper.RegisterInterchainAccount(ctx, JUNO_OSMO_CONNECTION_ID, feeAccount); err != nil {
-			k.Logger(ctx).Error(fmt.Sprintf("unable to register fee account, err: %s", err.Error()))
-		}
-	}
 
 	// get pools information from Osmosis
 	// make request for pools

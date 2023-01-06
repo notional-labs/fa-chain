@@ -37,7 +37,7 @@ func (im IBCModule) OnChanOpenInit(
 	counterparty channeltypes.Counterparty,
 	version string,
 ) error {
-	im.keeper.Logger(ctx).Info(fmt.Sprintf("OnChanOpenAck: portID %s, channelID %s", portID, channelID))
+	im.keeper.Logger(ctx).Info(fmt.Sprintf("OnChanOpenInit: portID %s, channelID %s", portID, channelID))
 	// Note: The channel capability must be claimed by the authentication module in OnChanOpenInit otherwise the
 	// authentication module will not be able to send packets on the channel created for the associated interchain account.
 	if err := im.keeper.ClaimCapability(ctx, channelCap, host.ChannelCapabilityPath(portID, channelID)); err != nil {
@@ -65,7 +65,7 @@ func (im IBCModule) OnChanOpenAck(
 		ctx.Logger().Error(fmt.Sprintf("Expected to find an address for %s/%s", controllerConnectionId, portID))
 		return nil
 	}
-	ctx.Logger().Info("ICA adddress = %v \n", address)
+	ctx.Logger().Info(fmt.Sprintf("ICA adddress = %v \n", address))
 
 	// get host chain id from connection
 	// fetch counterparty connection

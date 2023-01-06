@@ -54,13 +54,13 @@ func NewKeeper(
 	scopedKeeper capabilitykeeper.ScopedKeeper,
 	feeCollectorName string,
 	nonNativeFeeCollectorName string,
-) *Keeper {
+) Keeper {
 	// set KeyTable if it has not already been set
 	if !ps.HasKeyTable() {
 		ps = ps.WithKeyTable(types.ParamKeyTable())
 	}
 
-	return &Keeper{
+	return Keeper{
 		cdc:                       cdc,
 		storeKey:                  storeKey,
 		memKey:                    memKey,
