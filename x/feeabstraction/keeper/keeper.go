@@ -115,25 +115,32 @@ func (k Keeper) HasFeeRate(ctx sdk.Context, denomJuno string) bool {
 
 // record for coins on osmosis to juno
 func (k Keeper) SetDenomTrack(ctx sdk.Context, denomOsmo, denomJuno string) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.StoreDenomTrack)
-	store.Set([]byte(denomOsmo), []byte(denomJuno))
-
+	storeOsmo := prefix.NewStore(ctx.KVStore(k.storeKey), types.StoreDenomOsmoTrack)
+	storeOsmo.Set([]byte(denomOsmo), []byte(denomJuno))
+	storeJuno := prefix.NewStore(ctx.KVStore(k.storeKey), types.StoreDenomJunoTrack)
+	storeJuno.Set([]byte(denomJuno), []byte(denomOsmo))
 }
 
-func (k Keeper) HasDenomTrack(ctx sdk.Context, denomOsmo string) bool {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.StoreDenomTrack)
+func (k Keeper) HasOsmoDenomTrack(ctx sdk.Context, denomOsmo string) bool {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.StoreDenomOsmoTrack)
 	return store.Has([]byte(denomOsmo))
 }
 
-func (k Keeper) GetDenomTrack(ctx sdk.Context, denomOsmo string) string {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.StoreDenomTrack)
+func (k Keeper) GetOsmoDenomTrack(ctx sdk.Context, denomOsmo string) string {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.StoreDenomOsmoTrack)
 	denomJuno := store.Get([]byte(denomOsmo))
 	return string(denomJuno)
 }
 
-func (k Keeper) IterateDenomTrack(ctx sdk.Context, f func(denomOsmo string, denomJuno string) bool) {
+func (k Keeper) GetJunoDenomTrack(ctx sdk.Context, denomJuno string) string {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.StoreDenomJunoTrack)
+	denomOsmo := store.Get([]byte(denomJuno))
+	return string(denomOsmo)
+}
+
+func (k Keeper) IterateOsmoDenomTrack(ctx sdk.Context, f func(denomOsmo string, denomJuno string) bool) {
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.StoreDenomTrack)
+	iterator := sdk.KVStorePrefixIterator(store, types.StoreDenomOsmoTrack)
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
@@ -150,6 +157,12 @@ func (k Keeper) SetPool(ctx sdk.Context, denomOsmo string, poolId uint64) {
 	data := make([]byte, 8)
 	binary.LittleEndian.PutUint64(data, uint64(poolId))
 	store.Set([]byte(denomOsmo), data)
+}
+
+func (k Keeper) GetPool(ctx sdk.Context, denomOsmo string) uint64 {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.StorePool)
+	b := store.Get([]byte(denomOsmo))
+	return uint64(binary.LittleEndian.Uint64(b))
 }
 
 func (k Keeper) HasPool(ctx sdk.Context, denomOsmo string) bool {
@@ -218,4 +231,23 @@ func (k Keeper) SetBaseDenom(ctx sdk.Context, denom string) error {
 
 	store.Set(types.BaseDenomKey, []byte(denom))
 	return nil
+}
+
+// Set temp fee for cross - chain swap processing
+func (k Keeper) SetTempFee(ctx sdk.Context, coins sdk.Coins) {
+	store := ctx.KVStore(k.storeKey)
+	b := coins.String()
+	store.Set(types.TempFeeKey, []byte(b))
+}
+
+// Get temp fee for cross - chain swap processing
+func (k Keeper) GetTempFee(ctx sdk.Context) (sdk.Coins, error) {
+	store := ctx.KVStore(k.storeKey)
+	b := store.Get(types.TempFeeKey)
+	coins, err := sdk.ParseCoinsNormalized(string(b))
+	if err != nil {
+		return sdk.Coins{}, err
+	}
+
+	return coins, nil
 }

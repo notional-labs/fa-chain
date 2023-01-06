@@ -10,6 +10,8 @@ import (
 	host "github.com/cosmos/ibc-go/v3/modules/core/24-host"
 	"github.com/notional-labs/fa-chain/utils"
 	"github.com/notional-labs/fa-chain/x/feeabstraction/types"
+
+	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 )
 
 // SubmitTxs submits an ICA transaction containing multiple messages
@@ -89,11 +91,44 @@ func (k Keeper) SendIBCFee(ctx sdk.Context) error {
 		}
 	}
 
+	// save tokens sent to ica address
+	k.SetTempFee(ctx, tokens)
+
 	return nil
 }
 
 // step 2: execute ICA swap
 func (k Keeper) ICASwap(ctx sdk.Context) error {
+
+	// message creation
+	hostFeeAddress := k.GetFeeICAAddress(ctx)
+	coins, err := k.GetTempFee(ctx)
+	if err != nil {
+		return err
+	}
+	baseDenom, err := k.GetBaseDenom(ctx)
+	if err != nil {
+		return err
+	}
+
+	for _, coin := range coins {
+		denomOsmo := k.GetJunoDenomTrack(ctx, coin.Denom)
+		poolId := k.GetPool(ctx, denomOsmo)
+
+		msgs := []sdk.Msg{
+			&gammtypes.MsgSwapExactAmountIn{
+				Sender: hostFeeAddress,
+				Routes: []gammtypes.SwapAmountInRoute{
+					{
+						PoolId:        poolId,
+						TokenOutDenom: GetIBCDenom(osmo_juno_channel_id, baseDenom).IBCDenom(),
+					},
+				},
+				TokenIn:           coin,
+				TokenOutMinAmount: sdk.NewIntFromUint64(0),
+			},
+		}
+	}
 
 	return nil
 }

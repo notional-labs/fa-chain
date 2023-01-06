@@ -18,7 +18,7 @@ func (s KeeperTestSuite) TestIdentifyChain() { //nolint:govet // it's fine to co
 	s.App.FAKeeper.BeginBlocker(s.Ctx)
 
 	// identify correct osmo denom in fee store
-	res := s.App.FAKeeper.GetDenomTrack(s.Ctx, app.OsmoDefaultBondDenom)
+	res := s.App.FAKeeper.GetOsmoDenomTrack(s.Ctx, app.OsmoDefaultBondDenom)
 	uosmoIbc := app.GetIBCDenom("channel-0", app.OsmoDefaultBondDenom).IBCDenom()
 	s.Suite.Require().Equal(uosmoIbc, res)
 

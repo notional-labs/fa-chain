@@ -25,7 +25,7 @@ func (k Keeper) BeginBlocker(ctx sdk.Context) {
 			denomTrace.GetBaseDenom(), denomTrace.IBCDenom(), osmo_juno_channel_id))
 
 		// if an ibc denom exists, skip
-		if k.HasDenomTrack(ctx, denomTrace.GetBaseDenom()) {
+		if k.HasOsmoDenomTrack(ctx, denomTrace.GetBaseDenom()) {
 			return true
 		}
 
@@ -50,7 +50,7 @@ func (k Keeper) BeginBlocker(ctx sdk.Context) {
 
 	// get pools information from Osmosis
 	// make request for pools
-	k.IterateDenomTrack(ctx, func(denomOsmo, _ string) bool {
+	k.IterateOsmoDenomTrack(ctx, func(denomOsmo, _ string) bool {
 
 		// check if it has pool
 		if k.HasPool(ctx, denomOsmo) {

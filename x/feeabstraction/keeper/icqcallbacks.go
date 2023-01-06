@@ -63,7 +63,7 @@ func FeeRateCallBack(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Quer
 		return err
 	}
 
-	denomJuno := k.GetDenomTrack(ctx, twapReq.BaseAsset)
+	denomJuno := k.GetOsmoDenomTrack(ctx, twapReq.BaseAsset)
 
 	if err := k.SetFeeRate(ctx, denomJuno, twapRes.ArithmeticTwap); err != nil {
 		return err
@@ -99,7 +99,7 @@ func PoolCallBack(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) 
 	}
 
 	denom := poolReq.MinLiquidity.GetDenomByIndex(0)
-	if !k.HasDenomTrack(ctx, denom) {
+	if !k.HasOsmoDenomTrack(ctx, denom) {
 		denom = poolReq.MinLiquidity.GetDenomByIndex(1)
 	}
 

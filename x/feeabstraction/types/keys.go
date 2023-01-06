@@ -31,10 +31,12 @@ const (
 var (
 	BaseDenomKey = []byte{0x01}
 	FeeICAKey    = []byte{0x02}
+	TempFeeKey   = []byte{0x03}
 
-	StoreFeeRate    = []byte{0x11}
-	StoreDenomTrack = []byte{0x12}
-	StorePool       = []byte{0x13}
+	StoreFeeRate        = []byte{0x11}
+	StoreDenomOsmoTrack = []byte{0x12}
+	StoreDenomJunoTrack = []byte{0x13}
+	StorePool           = []byte{0x14}
 )
 
 func KeyPrefix(p string) []byte {
