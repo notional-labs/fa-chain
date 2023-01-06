@@ -1,0 +1,9 @@
+syntax = "proto3";
+package fachain.icacallbacks;
+
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/notional-labs/fa-chain/x/icacallbacks/types";
+
+// Params defines the parameters for the module.
+message Params { option (gogoproto.goproto_stringer) = false; }
