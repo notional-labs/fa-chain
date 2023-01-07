@@ -139,5 +139,10 @@ func ConfirmReceiveCallback(k Keeper, ctx sdk.Context, args []byte, query icqtyp
 		return sdkerrors.Wrapf(types.ErrMarshalFailure, errMsg)
 	}
 
+	junoDenom := k.GetOsmoDenomTrack(ctx, fee.GetDenom())
+	fees, _ := k.GetTempFee(ctx)
+	fees = fees.Sub(sdk.NewCoins(sdk.NewCoin(junoDenom, fee.Amount)))
+	k.SetTempFee(ctx, fees)
+
 	return nil
 }

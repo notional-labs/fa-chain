@@ -3,7 +3,6 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	icatypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v3/modules/core/02-client/types"
@@ -162,7 +161,8 @@ func (k Keeper) ICASwap(ctx sdk.Context, coinOsmo sdk.Coin) error {
 func (k Keeper) MsgICATransferToFeeCollector(ctx sdk.Context, coinOsmo sdk.Coin, osmoChannel string) ([]sdk.Msg, error) {
 	sourcePort := ibctransfertypes.PortID
 	hostFeeAddress := k.GetFeeICAAddress(ctx)
-	receiver := k.accountKeeper.GetModuleAddress(authtypes.FeeCollectorName)
+	// DEBUG: currently set to NonNativeFeeCollectorName for debugging
+	receiver := k.accountKeeper.GetModuleAddress(types.NonNativeFeeCollectorName)
 	icaTimeoutNanos, err := k.GetTtl(ctx)
 	if err != nil {
 		return nil, err

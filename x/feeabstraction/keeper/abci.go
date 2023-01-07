@@ -140,9 +140,12 @@ func (k Keeper) EndBlocker(ctx sdk.Context) {
 	})
 
 	// temporary condition for coin
+	// prevent accidental base denom
+	// TODO: move accidental base denom to native fee collector
 	addr := k.accountKeeper.GetModuleAddress(types.NonNativeFeeCollectorName)
 	coins := k.bankKeeper.GetAllBalances(ctx, addr)
-	if !coins.IsZero() {
+	baseDenom, _ := k.GetBaseDenom(ctx)
+	if !coins.IsZero() && coins.AmountOf(baseDenom).IsZero() {
 		k.Logger(ctx).Info("Execute transfering all ibc tokens from nn fee collector")
 		//execute cross - chain swap
 		if err := k.SendIBCFee(ctx); err != nil {

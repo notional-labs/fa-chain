@@ -3,7 +3,6 @@ package keeper
 import (
 	"fmt"
 
-	"github.com/notional-labs/fa-chain/x/feeabstraction/types"
 	icacallbacks "github.com/notional-labs/fa-chain/x/icacallbacks"
 	icacallbackstypes "github.com/notional-labs/fa-chain/x/icacallbacks/types"
 
@@ -87,23 +86,9 @@ func SwapCallback(k Keeper, ctx sdk.Context, packet channeltypes.Packet, ack *ch
 		return nil
 	}
 
-	// save token out amount
+	// send ica transfer
 	k.Logger(ctx).Info(fmt.Sprintf("TokenOutAmount = %v", res.TokenOutAmount.Uint64()))
 	k.ICATransferToFeeCollector(ctx, sdk.NewInt64Coin(k.MustGetBaseIBCDenomOnOsmo(ctx).IBCDenom(), res.TokenOutAmount.Int64()))
-
-	// remove token in from store temp fee
-	swapCallback := &types.SwapCallback{}
-	if err := swapCallback.Unmarshal(args); err != nil {
-		k.Logger(ctx).Error(fmt.Sprintf("Unmarshall SwapCallback failed, err = %s", err.Error()))
-		return err
-	}
-
-	junoDenom := k.GetOsmoDenomTrack(ctx, swapCallback.TokenIn.GetDenom())
-	fees, _ := k.GetTempFee(ctx)
-	k.Logger(ctx).Info(fmt.Sprintf("fees length before = %v \n", fees.Len()))
-	fees = fees.Sub(sdk.NewCoins(sdk.NewCoin(junoDenom, swapCallback.TokenIn.Amount)))
-	k.Logger(ctx).Info(fmt.Sprintf("fees length after = %v \n", fees.Len()))
-	k.SetTempFee(ctx, fees)
 
 	return nil
 }
