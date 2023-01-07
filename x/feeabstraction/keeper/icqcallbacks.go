@@ -4,14 +4,17 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/notional-labs/fa-chain/x/feeabstraction/types"
 	icqtypes "github.com/notional-labs/fa-chain/x/interchainquery/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 	twapquery "github.com/osmosis-labs/osmosis/v13/x/twap/client/queryproto"
 )
 
 const (
-	ICQCallbackID_FeeRate = "fee_rate"
-	ICQCallbackID_Pool    = "pool"
+	ICQCallbackID_FeeRate        = "fee_rate"
+	ICQCallbackID_Pool           = "pool"
+	ICQCallbackID_ConfirmReceive = "ibc_transfer_receive"
 )
 
 // ICQCallbacks wrapper struct for stakeibc keeper
@@ -45,7 +48,8 @@ func (c ICQCallbacks) AddICQCallback(id string, fn interface{}) icqtypes.QueryCa
 func (c ICQCallbacks) RegisterICQCallbacks() icqtypes.QueryCallbacks {
 	return c.
 		AddICQCallback(ICQCallbackID_FeeRate, ICQCallback(FeeRateCallBack)).
-		AddICQCallback(ICQCallbackID_Pool, ICQCallback(PoolCallBack))
+		AddICQCallback(ICQCallbackID_Pool, ICQCallback(PoolCallBack)).
+		AddICQCallback(ICQCallbackID_ConfirmReceive, ICQCallback(ConfirmReceiveCallback))
 }
 
 func FeeRateCallBack(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
@@ -104,6 +108,36 @@ func PoolCallBack(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) 
 	}
 
 	k.SetPool(ctx, denom, pool.GetId())
+
+	return nil
+}
+
+func ConfirmReceiveCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
+	k.Logger(ctx).Info(fmt.Sprintf("ConfirmReceiveCallback executing, QueryId: %vs, Host: %s, QueryType: %s, Connection: %s",
+		query.Id, query.ChainId, query.QueryType, query.ConnectionId))
+
+	// Unmarshal the CB args into a coin type
+	fee := sdk.Coin{}
+	err := k.cdc.Unmarshal(args, &fee)
+	if err != nil {
+		errMsg := fmt.Sprintf("unable to unmarshal balance in callback args, err: %s", err.Error())
+		k.Logger(ctx).Error(errMsg)
+		return sdkerrors.Wrapf(types.ErrMarshalFailure, errMsg)
+	}
+
+	// Check if the coin is nil (which would indicate the fee has not come to ica address)
+	// If already swapped, this should fail also
+	if fee.IsNil() {
+		k.Logger(ctx).Info(fmt.Sprintf("ConfirmReceiveCallback: ica address does not have this fee"))
+		return nil
+	}
+
+	// execute ICASwap
+	if err := k.ICASwap(ctx, fee); err != nil {
+		errMsg := fmt.Sprintf("fail to ica swap, err :%s", err.Error())
+		k.Logger(ctx).Error(errMsg)
+		return sdkerrors.Wrapf(types.ErrMarshalFailure, errMsg)
+	}
 
 	return nil
 }

@@ -7,7 +7,10 @@ import "cosmos/base/v1beta1/coin.proto";
 option go_package = "github.com/notional-labs/fa-chain/x/feeabstraction/types";
 
 message SwapCallback {
-
+    cosmos.base.v1beta1.Coin token_in = 1 [
+        (gogoproto.moretags) = "yaml:\"token_in\"",
+        (gogoproto.nullable) = false
+    ];
 }
 
 message FeeReceiveCallback {

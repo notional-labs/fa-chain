@@ -101,52 +101,47 @@ func (k Keeper) SendIBCFee(ctx sdk.Context) error {
 }
 
 // step 2: execute ICA swap
-func (k Keeper) ICASwap(ctx sdk.Context) error {
+func (k Keeper) ICASwap(ctx sdk.Context, coinOsmo sdk.Coin) error {
 
 	// message creation
 	hostFeeAddress := k.GetFeeICAAddress(ctx)
-	coins, err := k.GetTempFee(ctx)
-	if err != nil {
-		return err
-	}
 	baseDenom, err := k.GetBaseDenom(ctx)
 	if err != nil {
 		return err
 	}
 
-	for _, coin := range coins {
-		denomOsmo := k.GetJunoDenomTrack(ctx, coin.Denom)
-		poolId := k.GetPool(ctx, denomOsmo)
+	poolId := k.GetPool(ctx, coinOsmo.GetDenom())
 
-		msgs := []sdk.Msg{
-			&gammtypes.MsgSwapExactAmountIn{
-				Sender: hostFeeAddress,
-				Routes: []gammtypes.SwapAmountInRoute{
-					{
-						PoolId:        poolId,
-						TokenOutDenom: GetIBCDenom(osmo_juno_channel_id, baseDenom).IBCDenom(),
-					},
+	msgs := []sdk.Msg{
+		&gammtypes.MsgSwapExactAmountIn{
+			Sender: hostFeeAddress,
+			Routes: []gammtypes.SwapAmountInRoute{
+				{
+					PoolId:        poolId,
+					TokenOutDenom: GetIBCDenom(osmo_juno_channel_id, baseDenom).IBCDenom(),
 				},
-				TokenIn:           sdk.NewCoin(denomOsmo, coin.Amount),
-				TokenOutMinAmount: sdk.OneInt(),
 			},
-		}
+			TokenIn:           coinOsmo,
+			TokenOutMinAmount: sdk.OneInt(),
+		},
+	}
 
-		icaTimeoutNanos, err := k.GetTtl(ctx)
-		if err != nil {
-			return err
-		}
+	icaTimeoutNanos, err := k.GetTtl(ctx)
+	if err != nil {
+		return err
+	}
 
-		swapCallback := types.SwapCallback{}
-		b, err := swapCallback.Marshal()
-		if err != nil {
-			return err
-		}
+	swapCallback := types.SwapCallback{
+		TokenIn: coinOsmo,
+	}
+	b, err := swapCallback.Marshal()
+	if err != nil {
+		return err
+	}
 
-		_, err = k.SubmitTxs(ctx, JUNO_OSMO_CONNECTION_ID, msgs, icaTimeoutNanos, ICACallbackID_SWAP, b)
-		if err != nil {
-			return sdkerrors.Wrapf(err, "failed to submit txs")
-		}
+	_, err = k.SubmitTxs(ctx, JUNO_OSMO_CONNECTION_ID, msgs, icaTimeoutNanos, ICACallbackID_SWAP, b)
+	if err != nil {
+		return sdkerrors.Wrapf(err, "failed to submit txs")
 	}
 
 	return nil

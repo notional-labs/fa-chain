@@ -16,8 +16,9 @@ const (
 	// MemStoreKey defines the in-memory store key
 	MemStoreKey = "mem_feeabstraction"
 
-	TWAP_STORE_QUERY = "/osmosis.twap.v1beta1.Query/ArithmeticTwapToNow"
-	POOL_STORE_QUERY = "/osmosis.gamm.v1beta1.Query/PoolsWithFilter"
+	TWAP_STORE_QUERY            = "/osmosis.twap.v1beta1.Query/ArithmeticTwapToNow"
+	POOL_STORE_QUERY            = "/osmosis.gamm.v1beta1.Query/PoolsWithFilter"
+	BANK_STORE_QUERY_WITH_PROOF = "store/bank/key"
 
 	// NonNativeFeeCollectorName the module account name for the alt fee collector account address (used for auto-swapping non-base-denom tx fees).
 	NonNativeFeeCollectorName = "non_native_fee_collector"

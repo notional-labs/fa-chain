@@ -7,6 +7,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	bech32 "github.com/cosmos/cosmos-sdk/types/bech32"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
 	"github.com/notional-labs/fa-chain/x/feeabstraction/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
@@ -158,9 +160,36 @@ func (k Keeper) EndBlocker(ctx sdk.Context) {
 		if err := k.SendIBCFee(ctx); err != nil {
 			k.Logger(ctx).Error("failed to ibc transfer fee for nn fee collector", "error", err)
 		}
+	}
 
-		if err := k.ICASwap(ctx); err != nil {
-			k.Logger(ctx).Error("failed to ica swap", "error", err)
+	// ICQ check to confirm that ica address on Osmo has received temp fee
+	fees, err := k.GetTempFee(ctx)
+	if err != nil {
+		k.Logger(ctx).Error("failed to get temp fee", "error", err)
+	}
+
+	// if there is temp fee waiting to be converted, execute icq
+	for _, coin := range fees {
+		k.Logger(ctx).Info(fmt.Sprintf("Trying to confirm that ica address has received fund for fee = %v", coin))
+		denomOsmo := k.GetJunoDenomTrack(ctx, coin.Denom)
+
+		_, addr, _ := bech32.DecodeAndConvert(k.GetFeeICAAddress(ctx))
+		data := banktypes.CreateAccountBalancesPrefix(addr)
+
+		ttl, err := k.GetTtl(ctx)
+		if err != nil {
+			k.Logger(ctx).Error("failed to cast value", "error", err)
 		}
+
+		err = k.icqKeeper.MakeRequest(
+			ctx,
+			types.ModuleName,
+			ICQCallbackID_ConfirmReceive,
+			HOST_ZONE_CHAIN_ID,
+			JUNO_OSMO_CONNECTION_ID,
+			types.BANK_STORE_QUERY_WITH_PROOF,
+			append(data, []byte(denomOsmo)...),
+			ttl, // ttl
+		)
 	}
 }
