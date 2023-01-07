@@ -9,8 +9,7 @@ func (s KeeperTestSuite) TestIdentifyChain() { //nolint:govet // it's fine to co
 	s.SetupTest()
 
 	// Send token
-	err := s.MockIBCTransferFromBtoA()
-	s.Suite.Require().NoError(err)
+	s.MockIBCTransferFromBtoA()
 	// check if account on A has coin
 	amt := s.App.BankKeeper.GetBalance(s.Ctx, s.Chain.SenderAccount.GetAddress(), BaseDenomIBC)
 	s.Suite.Require().NotNil(amt)
@@ -19,7 +18,7 @@ func (s KeeperTestSuite) TestIdentifyChain() { //nolint:govet // it's fine to co
 	s.App.FAKeeper.BeginBlocker(s.Ctx)
 
 	// identify correct osmo denom in fee store
-	res := s.App.FAKeeper.GetDenomTrack(s.Ctx, app.OsmoDefaultBondDenom)
+	res := s.App.FAKeeper.GetOsmoDenomTrack(s.Ctx, app.OsmoDefaultBondDenom)
 	uosmoIbc := app.GetIBCDenom("channel-0", app.OsmoDefaultBondDenom).IBCDenom()
 	s.Suite.Require().Equal(uosmoIbc, res)
 

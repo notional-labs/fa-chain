@@ -13,7 +13,7 @@ import (
 	"github.com/notional-labs/fa-chain/app"
 	"github.com/notional-labs/fa-chain/app/apptesting"
 	"github.com/notional-labs/fa-chain/x/interchainquery/keeper"
-	"github.com/notional-labs/fa-chain/x/interchainquery/types"
+	icqtypes "github.com/notional-labs/fa-chain/x/interchainquery/types"
 )
 
 const (
@@ -34,14 +34,24 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.CreateTransferChannel(HostChainId)
 
 	// check if Osmosis has pool
-	pool, _ := s.HostApp.GAMMKeeper.GetPoolAndPoke(s.HostCtx, uint64(1))
+	pool, _ := s.HostApp.GAMMKeeper.GetPoolAndPoke(s.HostChain.GetContext(), uint64(1))
 	s.Require().NotNil(pool)
+
+	// fund pool 1 on Osmosis
+	for _, coin := range pool.GetTotalPoolLiquidity(s.HostChain.GetContext()) {
+		s.FundHostAppAccount(pool.GetAddress(), coin)
+	}
+
+	// confirmed that pool 1 has coin in bank keeper
+	coins := s.HostApp.BankKeeper.GetAllBalances(s.HostChain.GetContext(), pool.GetAddress())
+	liq := pool.GetTotalPoolLiquidity(s.HostChain.GetContext())
+	s.Require().Equal(coins, liq)
 }
 
 // ====== IBC ======
 
 // sending ufa from osmosis to fachain
-func (s *KeeperTestSuite) MockIBCTransferFromBtoA() error {
+func (s *KeeperTestSuite) MockIBCTransferFromBtoA() {
 	timeoutHeight := clienttypes.NewHeight(0, 110)
 
 	amount, _ := sdk.NewIntFromString("100000000") // 2^63 (one above int64)
@@ -50,24 +60,17 @@ func (s *KeeperTestSuite) MockIBCTransferFromBtoA() error {
 	// send from chainA to chainB
 	msg := transfertypes.NewMsgTransfer(s.TransferPath.EndpointB.ChannelConfig.PortID, s.TransferPath.EndpointB.ChannelID, coinToSendToA, s.HostChain.SenderAccount.GetAddress().String(), s.Chain.SenderAccount.GetAddress().String(), timeoutHeight, 0)
 	res, err := s.HostChain.SendMsgs(msg)
-	if err != nil {
-		return err
-	}
+	s.Require().NoError(err)
 
 	packet, err := ibctesting.ParsePacketFromEvents(res.GetEvents())
-	if err != nil {
-		return err
-	}
+	s.Require().NoError(err)
 
 	// relay send
-	if err = s.TransferPath.RelayPacket(packet); err != nil {
-		return err
-	}
-
-	return nil
+	err = s.TransferPath.RelayPacket(packet)
+	s.Require().NoError(err)
 }
 
-func (s *KeeperTestSuite) GetMsgServer() types.MsgServer {
+func (s *KeeperTestSuite) GetMsgServer() icqtypes.MsgServer {
 	return keeper.NewMsgServerImpl(s.App.InterchainqueryKeeper)
 }
 

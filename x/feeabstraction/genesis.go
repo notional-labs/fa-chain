@@ -1,4 +1,4 @@
-package fachain
+package feeabstraction
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"

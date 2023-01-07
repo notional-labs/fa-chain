@@ -50,6 +50,7 @@ type AppTestHelper struct {
 	Chain        *ibctesting.TestChain
 	HostChain    *ibctesting.TestChain
 	TransferPath *ibctesting.Path
+	ICAPath      *ibctesting.Path
 
 	QueryHelper  *baseapp.QueryServiceTestHelper
 	TestAccs     []sdk.AccAddress
@@ -180,9 +181,9 @@ func (s *AppTestHelper) CreateICAChannel(owner string) string {
 	// Create ICA Path and then copy over the client and connection from the transfer path
 	icaPath := NewIcaPath(s.Chain, s.HostChain)
 	icaPath = CopyConnectionAndClientToPath(icaPath, s.TransferPath)
+	s.ICAPath = icaPath
 
 	// Register the ICA and complete the handshake
-
 	s.RegisterInterchainAccount(icaPath.EndpointA, owner)
 
 	err := icaPath.EndpointB.ChanOpenTry()
@@ -206,6 +207,9 @@ func (s *AppTestHelper) CreateICAChannel(owner string) string {
 	icaAddress, found := s.App.ICAControllerKeeper.GetInterchainAccountAddress(s.Ctx, ibctesting.FirstConnectionID, portID)
 	s.Require().True(found, "can't get ICA address")
 	s.IcaAddresses[owner] = icaAddress
+	icaAddressB, found := s.HostApp.ICAHostKeeper.GetInterchainAccountAddress(s.HostCtx, icaPath.EndpointB.ConnectionID, icaPath.EndpointA.ChannelConfig.PortID)
+	s.Require().True(found, "can't get ICA address on chain B")
+	s.Require().Equal(icaAddress, icaAddressB)
 
 	// Finally set the active channel
 	s.App.ICAControllerKeeper.SetActiveChannelID(s.Ctx, ibctesting.FirstConnectionID, portID, channelID)

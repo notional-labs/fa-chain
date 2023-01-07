@@ -14,10 +14,10 @@ func (k Keeper) FeeRate(goCtx context.Context, req *types.QueryFeeRateRequest) (
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// calculate fee
-	amt, err := k.ConvertToBaseToken(ctx, req.Fee)
+	feeRate, err := k.GetFeeRate(ctx, req.Denom)
 	if err != nil {
 		return &types.QueryFeeRateResponse{}, err
 	}
 
-	return &types.QueryFeeRateResponse{FeeRate: amt}, nil
+	return &types.QueryFeeRateResponse{FeeRate: feeRate.String()}, nil
 }

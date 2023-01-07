@@ -7,7 +7,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
+	bech32 "github.com/cosmos/cosmos-sdk/types/bech32"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
 	"github.com/notional-labs/fa-chain/x/feeabstraction/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
@@ -26,7 +27,7 @@ func (k Keeper) BeginBlocker(ctx sdk.Context) {
 			denomTrace.GetBaseDenom(), denomTrace.IBCDenom(), osmo_juno_channel_id))
 
 		// if an ibc denom exists, skip
-		if k.HasDenomTrack(ctx, denomTrace.GetBaseDenom()) {
+		if k.HasOsmoDenomTrack(ctx, denomTrace.GetBaseDenom()) {
 			return true
 		}
 
@@ -36,26 +37,30 @@ func (k Keeper) BeginBlocker(ctx sdk.Context) {
 			k.SetDenomTrack(ctx, denomTrace.GetBaseDenom(), denomTrace.IBCDenom())
 		}
 
+		// putting ica registration behind ibc transfer ensures that connection on both parties are OPEN.
+		feeAccount := types.GetFeeICAAccountOwner(HOST_ZONE_CHAIN_ID)
+		_, exist := k.IcaControllerKeeper.GetInterchainAccountAddress(ctx, JUNO_OSMO_CONNECTION_ID, feeAccount)
+		if !exist {
+			if err := k.IcaControllerKeeper.RegisterInterchainAccount(ctx, JUNO_OSMO_CONNECTION_ID, feeAccount); err != nil {
+				k.Logger(ctx).Error(fmt.Sprintf("unable to register fee account, err: %s", err.Error()))
+				return true
+			}
+		}
+
 		return true
 	})
 
 	// get pools information from Osmosis
 	// make request for pools
-	k.IterateDenomTrack(ctx, func(denomOsmo, _ string) bool {
+	k.IterateOsmoDenomTrack(ctx, func(denomOsmo, _ string) bool {
 
 		// check if it has pool
 		if k.HasPool(ctx, denomOsmo) {
 			return true
 		}
 
-		baseDenom, err := k.GetBaseDenom(ctx)
-		if err != nil {
-			k.Logger(ctx).Error(err.Error())
-			return true
-		}
-
 		req := gammtypes.QueryPoolsWithFilterRequest{
-			MinLiquidity: sdk.NewCoins(sdk.NewCoin(denomOsmo, sdk.OneInt()), sdk.NewCoin(GetIBCDenom(osmo_juno_channel_id, baseDenom).IBCDenom(), sdk.OneInt())),
+			MinLiquidity: sdk.NewCoins(sdk.NewCoin(denomOsmo, sdk.OneInt()), sdk.NewCoin(k.MustGetBaseIBCDenomOnOsmo(ctx).IBCDenom(), sdk.OneInt())),
 			PoolType:     "Balancer",
 		}
 
@@ -75,8 +80,8 @@ func (k Keeper) BeginBlocker(ctx sdk.Context) {
 		if err := k.icqKeeper.MakeRequest(ctx,
 			types.ModuleName,
 			ICQCallbackID_Pool,
-			host_zone_chain_id,
-			juno_osmo_connection_id,
+			HOST_ZONE_CHAIN_ID,
+			JUNO_OSMO_CONNECTION_ID,
 			types.POOL_STORE_QUERY,
 			data,
 			ttl,
@@ -99,18 +104,12 @@ func (k Keeper) EndBlocker(ctx sdk.Context) {
 	k.IteratePool(ctx, func(denomOsmo string, poolId uint64) bool {
 		k.Logger(ctx).Info(fmt.Sprintf("Found pool: (%s, %d)", denomOsmo, poolId))
 
-		baseDenom, err := k.GetBaseDenom(ctx)
-		if err != nil {
-			k.Logger(ctx).Error(err.Error())
-			return true
-		}
-
 		// make request for twap
 		// TODO: better handling of start time
 		req := twapquery.ArithmeticTwapToNowRequest{
 			PoolId:     poolId,
 			BaseAsset:  denomOsmo,
-			QuoteAsset: GetIBCDenom(osmo_juno_channel_id, baseDenom).IBCDenom(),
+			QuoteAsset: k.MustGetBaseIBCDenomOnOsmo(ctx).IBCDenom(),
 			StartTime:  time.Now().Add(-time.Second * 10),
 		}
 		data, err := req.Marshal()
@@ -127,8 +126,8 @@ func (k Keeper) EndBlocker(ctx sdk.Context) {
 		if err := k.icqKeeper.MakeRequest(ctx,
 			types.ModuleName,
 			ICQCallbackID_FeeRate,
-			host_zone_chain_id,
-			juno_osmo_connection_id,
+			HOST_ZONE_CHAIN_ID,
+			JUNO_OSMO_CONNECTION_ID,
 			types.TWAP_STORE_QUERY,
 			data,
 			ttl,
@@ -139,4 +138,50 @@ func (k Keeper) EndBlocker(ctx sdk.Context) {
 
 		return true
 	})
+
+	// temporary condition for coin
+	// prevent accidental base denom
+	// TODO: move accidental base denom to native fee collector
+	addr := k.accountKeeper.GetModuleAddress(types.NonNativeFeeCollectorName)
+	coins := k.bankKeeper.GetAllBalances(ctx, addr)
+	baseDenom, _ := k.GetBaseDenom(ctx)
+	if !coins.IsZero() && coins.AmountOf(baseDenom).IsZero() {
+		k.Logger(ctx).Info("Execute transfering all ibc tokens from nn fee collector")
+		//execute cross - chain swap
+		if err := k.SendIBCFee(ctx); err != nil {
+			k.Logger(ctx).Error("failed to ibc transfer fee for nn fee collector", "error", err)
+		}
+	}
+
+	// ICQ check to confirm that ica address on Osmo has received temp fee
+	fees, err := k.GetTempFee(ctx)
+	if err != nil {
+		k.Logger(ctx).Error("failed to get temp fee", "error", err)
+	}
+
+	// if there is temp fee waiting to be converted, execute icq
+	// currently, it is best - effort, maybe I should add check ?
+	for _, coin := range fees {
+		k.Logger(ctx).Info(fmt.Sprintf("Trying to confirm that ica address has received fund for fee = %v", coin))
+		denomOsmo := k.GetJunoDenomTrack(ctx, coin.Denom)
+
+		_, addr, _ := bech32.DecodeAndConvert(k.GetFeeICAAddress(ctx))
+		data := banktypes.CreateAccountBalancesPrefix(addr)
+
+		ttl, err := k.GetTtl(ctx)
+		if err != nil {
+			k.Logger(ctx).Error("failed to cast value", "error", err)
+		}
+
+		err = k.icqKeeper.MakeRequest(
+			ctx,
+			types.ModuleName,
+			ICQCallbackID_ConfirmReceive,
+			HOST_ZONE_CHAIN_ID,
+			JUNO_OSMO_CONNECTION_ID,
+			types.BANK_STORE_QUERY_WITH_PROOF,
+			append(data, []byte(denomOsmo)...),
+			ttl, // ttl
+		)
+	}
 }

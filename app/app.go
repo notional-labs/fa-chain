@@ -107,13 +107,16 @@ import (
 	feeabstraction "github.com/notional-labs/fa-chain/x/feeabstraction"
 	feeabstractionkeeper "github.com/notional-labs/fa-chain/x/feeabstraction/keeper"
 	feeabstractiontypes "github.com/notional-labs/fa-chain/x/feeabstraction/types"
+	icacallbacks "github.com/notional-labs/fa-chain/x/icacallbacks"
+	icacallbackskeeper "github.com/notional-labs/fa-chain/x/icacallbacks/keeper"
+	icacallbackstypes "github.com/notional-labs/fa-chain/x/icacallbacks/types"
 	"github.com/notional-labs/fa-chain/x/interchainquery"
 	interchainquerykeeper "github.com/notional-labs/fa-chain/x/interchainquery/keeper"
 	interchainquerytypes "github.com/notional-labs/fa-chain/x/interchainquery/types"
 )
 
 const (
-	AccountAddressPrefix = "fa"
+	AccountAddressPrefix = "fac"
 	Name                 = "fachain"
 )
 
@@ -162,6 +165,7 @@ var (
 		monitoringp.AppModuleBasic{},
 		feeabstraction.AppModuleBasic{},
 		interchainquery.AppModuleBasic{},
+		icacallbacks.AppModuleBasic{},
 	)
 
 	// module account permissions
@@ -174,6 +178,7 @@ var (
 		govtypes.ModuleName:                           {authtypes.Burner},
 		ibctransfertypes.ModuleName:                   {authtypes.Minter, authtypes.Burner},
 		interchainquerytypes.ModuleName:               nil,
+		icacallbackstypes.ModuleName:                  nil,
 		icatypes.ModuleName:                           nil,
 		feeabstractiontypes.NonNativeFeeCollectorName: nil,
 	}
@@ -235,9 +240,12 @@ type App struct {
 	ScopedTransferKeeper      capabilitykeeper.ScopedKeeper
 	ScopedICAControllerKeeper capabilitykeeper.ScopedKeeper
 	ScopedICAHostKeeper       capabilitykeeper.ScopedKeeper
+	ScopedFAKeeper            capabilitykeeper.ScopedKeeper
+	ScopedIcacallbacksKeeper  capabilitykeeper.ScopedKeeper
 
 	FAKeeper              feeabstractionkeeper.Keeper
 	InterchainqueryKeeper interchainquerykeeper.Keeper
+	IcacallbacksKeeper    icacallbackskeeper.Keeper
 
 	// mm is the module manager
 	mm *module.Manager
@@ -271,6 +279,7 @@ func New(
 		govtypes.StoreKey, paramstypes.StoreKey, ibchost.StoreKey, upgradetypes.StoreKey, feegrant.StoreKey,
 		evidencetypes.StoreKey, ibctransfertypes.StoreKey, capabilitytypes.StoreKey,
 		feeabstractiontypes.StoreKey, interchainquerytypes.StoreKey, icacontrollertypes.StoreKey, icahosttypes.StoreKey,
+		icacallbackstypes.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
@@ -360,9 +369,6 @@ func New(
 		app.IBCKeeper.ChannelKeeper, app.IBCKeeper.ChannelKeeper, &app.IBCKeeper.PortKeeper,
 		app.AccountKeeper, app.BankKeeper, scopedTransferKeeper,
 	)
-	var (
-		transferModule = transfer.NewAppModule(app.TransferKeeper)
-	)
 
 	// Create evidence Keeper for to register the IBC light client misbehaviour evidence route
 	evidenceKeeper := evidencekeeper.NewKeeper(
@@ -383,16 +389,36 @@ func New(
 		scopedICAControllerKeeper, app.MsgServiceRouter(),
 	)
 
+	scopedIcacallbacksKeeper := app.CapabilityKeeper.ScopeToModule(icacallbackstypes.ModuleName)
+	app.ScopedIcacallbacksKeeper = scopedIcacallbacksKeeper
+	app.IcacallbacksKeeper = *icacallbackskeeper.NewKeeper(
+		appCodec,
+		keys[icacallbackstypes.StoreKey],
+		keys[icacallbackstypes.MemStoreKey],
+		app.GetSubspace(icacallbackstypes.ModuleName),
+		scopedIcacallbacksKeeper,
+		*app.IBCKeeper,
+		app.ICAControllerKeeper,
+	)
+
 	app.InterchainqueryKeeper = interchainquerykeeper.NewKeeper(appCodec, keys[interchainquerytypes.StoreKey], app.IBCKeeper)
 	interchainQueryModule := interchainquery.NewAppModule(appCodec, app.InterchainqueryKeeper)
 
-	app.FAKeeper = *feeabstractionkeeper.NewKeeper(
+	scopedFAKeeper := app.CapabilityKeeper.ScopeToModule(feeabstractiontypes.ModuleName)
+	app.ScopedFAKeeper = scopedFAKeeper
+	app.FAKeeper = feeabstractionkeeper.NewKeeper(
 		appCodec,
 		keys[feeabstractiontypes.StoreKey],
 		keys[feeabstractiontypes.MemStoreKey],
 		app.GetSubspace(feeabstractiontypes.ModuleName),
 		app.InterchainqueryKeeper,
 		app.TransferKeeper,
+		app.ICAControllerKeeper,
+		*app.IBCKeeper,
+		app.BankKeeper,
+		app.AccountKeeper,
+		scopedFAKeeper,
+		app.IcacallbacksKeeper,
 		authtypes.FeeCollectorName,
 		feeabstractiontypes.NonNativeFeeCollectorName,
 	)
@@ -400,6 +426,14 @@ func New(
 
 	// Register ICQ callbacks
 	err := app.InterchainqueryKeeper.SetCallbackHandler(feeabstractiontypes.ModuleName, app.FAKeeper.ICQCallbackHandler())
+	if err != nil {
+		return nil
+	}
+
+	icacallbacksModule := icacallbacks.NewAppModule(appCodec, app.IcacallbacksKeeper, app.AccountKeeper, app.BankKeeper)
+	// Register ICA calllbacks
+	// stakeibc
+	err = app.IcacallbacksKeeper.SetICACallbackHandler(feeabstractiontypes.ModuleName, app.FAKeeper.ICACallbackHandler())
 	if err != nil {
 		return nil
 	}
@@ -419,6 +453,8 @@ func New(
 	// - ICA
 	// - base app
 	var icamiddlewareStack ibcporttypes.IBCModule
+	icamiddlewareStack = feeabstraction.NewIBCModule(app.FAKeeper)
+	icamiddlewareStack = icacallbacks.NewIBCModule(app.IcacallbacksKeeper, icamiddlewareStack)
 	icamiddlewareStack = icacontroller.NewIBCModule(app.ICAControllerKeeper, icamiddlewareStack)
 	icaHostIBCModule := icahost.NewIBCModule(app.ICAHostKeeper)
 
@@ -429,8 +465,9 @@ func New(
 	ibcRouter := ibcporttypes.NewRouter()
 	ibcRouter.
 		AddRoute(ibctransfertypes.ModuleName, transferStack).
+		AddRoute(icahosttypes.SubModuleName, icaHostIBCModule).
 		AddRoute(icacontrollertypes.SubModuleName, icamiddlewareStack).
-		AddRoute(icahosttypes.SubModuleName, icaHostIBCModule)
+		AddRoute(feeabstractiontypes.ModuleName, icamiddlewareStack)
 	// Note, authentication module packets are routed to the top level of the middleware stack
 	app.IBCKeeper.SetRouter(ibcRouter)
 
@@ -464,9 +501,10 @@ func New(
 		evidence.NewAppModule(app.EvidenceKeeper),
 		ibc.NewAppModule(app.IBCKeeper),
 		params.NewAppModule(app.ParamsKeeper),
-		transferModule,
+		transfer.NewAppModule(app.TransferKeeper),
 		faModule,
 		interchainQueryModule,
+		icacallbacksModule,
 		icaModule,
 	)
 
@@ -496,6 +534,7 @@ func New(
 		feegrant.ModuleName,
 		paramstypes.ModuleName,
 		interchainquerytypes.ModuleName,
+		icacallbackstypes.ModuleName,
 	)
 
 	app.mm.SetOrderEndBlockers(
@@ -520,6 +559,7 @@ func New(
 		ibctransfertypes.ModuleName,
 		icatypes.ModuleName,
 		interchainquerytypes.ModuleName,
+		icacallbackstypes.ModuleName,
 	)
 
 	// NOTE: The genutils module must occur after staking so that pools are
@@ -549,6 +589,7 @@ func New(
 		ibctransfertypes.ModuleName,
 		feegrant.ModuleName,
 		interchainquerytypes.ModuleName,
+		icacallbackstypes.ModuleName,
 	)
 
 	app.mm.RegisterInvariants(&app.CrisisKeeper)
@@ -587,6 +628,7 @@ func New(
 	app.ScopedTransferKeeper = scopedTransferKeeper
 	app.ScopedICAControllerKeeper = scopedICAControllerKeeper
 	app.ScopedICAHostKeeper = scopedICAHostKeeper
+	app.ScopedFAKeeper = scopedFAKeeper
 
 	return app
 }
@@ -626,6 +668,12 @@ func (app *App) LoadHeight(height int64) error {
 func (app *App) ModuleAccountAddrs() map[string]bool {
 	modAccAddrs := make(map[string]bool)
 	for acc := range maccPerms {
+		// enable send and receive on NonNativeFeeCollectorName
+		if acc == feeabstractiontypes.NonNativeFeeCollectorName {
+			modAccAddrs[authtypes.NewModuleAddress(acc).String()] = false
+			continue
+		}
+
 		modAccAddrs[authtypes.NewModuleAddress(acc).String()] = true
 	}
 
@@ -764,6 +812,7 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(ibchost.ModuleName)
 	paramsKeeper.Subspace(feeabstractiontypes.ModuleName)
 	paramsKeeper.Subspace(interchainquerytypes.ModuleName)
+	paramsKeeper.Subspace(icacallbackstypes.ModuleName)
 	paramsKeeper.Subspace(icacontrollertypes.SubModuleName)
 	paramsKeeper.Subspace(icahosttypes.SubModuleName)
 
