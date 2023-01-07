@@ -3,6 +3,7 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	icatypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v3/modules/core/02-client/types"
@@ -120,11 +121,6 @@ func (k Keeper) ICASwap(ctx sdk.Context, coinOsmo sdk.Coin) error {
 
 	// message creation
 	hostFeeAddress := k.GetFeeICAAddress(ctx)
-	baseDenom, err := k.GetBaseDenom(ctx)
-	if err != nil {
-		return err
-	}
-
 	poolId := k.GetPool(ctx, coinOsmo.GetDenom())
 
 	msgs := []sdk.Msg{
@@ -133,7 +129,7 @@ func (k Keeper) ICASwap(ctx sdk.Context, coinOsmo sdk.Coin) error {
 			Routes: []gammtypes.SwapAmountInRoute{
 				{
 					PoolId:        poolId,
-					TokenOutDenom: GetIBCDenom(osmo_juno_channel_id, baseDenom).IBCDenom(),
+					TokenOutDenom: k.MustGetBaseIBCDenomOnOsmo(ctx).IBCDenom(),
 				},
 			},
 			TokenIn:           coinOsmo,
@@ -163,6 +159,53 @@ func (k Keeper) ICASwap(ctx sdk.Context, coinOsmo sdk.Coin) error {
 }
 
 // step 3: execute ICA IBC transfer from Osmosis back to native fee collector
-func (k Keeper) ICATransferToFeeCollector(ctx sdk.Context) error {
+func (k Keeper) MsgICATransferToFeeCollector(ctx sdk.Context, coinOsmo sdk.Coin, osmoChannel string) ([]sdk.Msg, error) {
+	sourcePort := ibctransfertypes.PortID
+	hostFeeAddress := k.GetFeeICAAddress(ctx)
+	receiver := k.accountKeeper.GetModuleAddress(authtypes.FeeCollectorName)
+	icaTimeoutNanos, err := k.GetTtl(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	msgs := []sdk.Msg{
+		&ibctransfertypes.MsgTransfer{
+			SourcePort:       sourcePort,
+			SourceChannel:    osmoChannel,
+			Token:            coinOsmo,
+			Sender:           hostFeeAddress,
+			Receiver:         receiver.String(),
+			TimeoutTimestamp: icaTimeoutNanos,
+		},
+	}
+
+	return msgs, nil
+}
+
+func (k Keeper) ICATransferToFeeCollector(ctx sdk.Context, coinOsmo sdk.Coin) error {
+
+	// message creation
+	msgs, err := k.MsgICATransferToFeeCollector(ctx, coinOsmo, osmo_juno_channel_id)
+	if err != nil {
+		return err
+	}
+
+	// send message
+	feeReceiveCallback := types.FeeReceiveCallback{}
+	b, err := feeReceiveCallback.Marshal()
+	if err != nil {
+		return err
+	}
+
+	icaTimeoutNanos, err := k.GetTtl(ctx)
+	if err != nil {
+		return err
+	}
+
+	_, err = k.SubmitTxs(ctx, JUNO_OSMO_CONNECTION_ID, msgs, icaTimeoutNanos, ICACallbackID_FEE_RECEIVE, b)
+	if err != nil {
+		return sdkerrors.Wrapf(err, "failed to submit txs")
+	}
+
 	return nil
 }

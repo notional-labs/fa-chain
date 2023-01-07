@@ -125,3 +125,48 @@ func (s *KeeperTestSuite) fundICAWallet(ctx sdk.Context, amount sdk.Coins) {
 	s.Require().NotEmpty(res)
 	s.Require().NoError(err)
 }
+
+func (s *KeeperTestSuite) TestICA_IBCTransfer() {
+	s.SetupTest()
+	feeAccountOwner := fmt.Sprintf("%s.%s", HostChainId, "FEE")
+	s.CreateICAChannel(feeAccountOwner)
+	s.MockIBCTransferFromBtoA()
+
+	// assume that 10000uosmo is in ICA account
+	acc := sdk.MustAccAddressFromBech32(s.IcaAddresses[feeAccountOwner])
+	amt := sdk.NewInt64Coin(app.OsmoDefaultBondDenom, 10000)
+	s.fundICAWallet(s.HostChain.GetContext(), sdk.NewCoins(amt))
+	old_balances := s.HostApp.BankKeeper.GetBalance(s.HostChain.GetContext(), acc, app.OsmoDefaultBondDenom)
+	s.Require().Equal(uint64(10000), old_balances.Amount.Uint64())
+
+	// make a transfer message
+	msgs, err := s.App.FAKeeper.MsgICATransferToFeeCollector(s.Ctx, amt, s.TransferPath.EndpointB.ChannelID)
+	s.Require().NoError(err)
+
+	data, err := icatypes.SerializeCosmosTx(s.App.AppCodec(), msgs)
+	s.Require().NoError(err)
+
+	icaPacketData := icatypes.InterchainAccountPacketData{
+		Type: icatypes.EXECUTE_TX,
+		Data: data,
+	}
+
+	packetData := icaPacketData.GetBytes()
+
+	// execute the msg
+	packet := channeltypes.NewPacket(
+		packetData,
+		s.Chain.SenderAccount.GetSequence(),
+		s.ICAPath.EndpointA.ChannelConfig.PortID,
+		s.ICAPath.EndpointA.ChannelID,
+		s.ICAPath.EndpointB.ChannelConfig.PortID,
+		s.ICAPath.EndpointB.ChannelID,
+		clienttypes.NewHeight(0, 100),
+		0,
+	)
+
+	txResponse, err := s.HostApp.ICAHostKeeper.OnRecvPacket(s.HostChain.GetContext(), packet)
+	txMsgData := &sdk.TxMsgData{}
+	err = proto.Unmarshal(txResponse, txMsgData)
+	s.Require().NoError(err)
+}

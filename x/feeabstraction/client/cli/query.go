@@ -6,12 +6,10 @@ import (
 
 	// "strings"
 
-	"github.com/spf13/cobra"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/spf13/cobra"
 
 	"github.com/notional-labs/fa-chain/x/feeabstraction/types"
 )
@@ -35,21 +33,21 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 
 func CmdQueryFeeRate() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "fee-rate [coin]",
-		Short: "shows fee-rate of a coin",
+		Use:   "fee-rate",
+		Short: "shows fee-rate",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 
 			queryClient := types.NewQueryClient(clientCtx)
 
-			coin, err := sdk.ParseCoinNormalized(args[0])
-			if err != nil {
+			denom := args[0]
+			if err := sdk.ValidateDenom(denom); err != nil {
 				return err
 			}
 
 			res, err := queryClient.FeeRate(context.Background(), &types.QueryFeeRateRequest{
-				Fee: coin,
+				Denom: denom,
 			})
 			if err != nil {
 				return err

@@ -50,11 +50,20 @@ func (k Keeper) GetConnectionId(ctx sdk.Context, portId string) (string, error) 
 	return "", fmt.Errorf(errMsg)
 }
 
-func GetIBCDenom(channelId, baseDenom string) transfertypes.DenomTrace {
+func GetIBCDenom(channelId, denom string) transfertypes.DenomTrace {
 	sourcePrefix := transfertypes.GetDenomPrefix("transfer", channelId)
-	prefixedDenom := sourcePrefix + baseDenom
+	prefixedDenom := sourcePrefix + denom
 
 	return transfertypes.ParseDenomTrace(prefixedDenom)
+}
+
+func (k Keeper) MustGetBaseIBCDenomOnOsmo(ctx sdk.Context) transfertypes.DenomTrace {
+	baseDenom, err := k.GetBaseDenom(ctx)
+	if err != nil {
+		panic(err)
+	}
+
+	return GetIBCDenom(juno_osmo_channel_id, baseDenom)
 }
 
 // fee address management

@@ -251,5 +251,3 @@ func (k Keeper) GetTempFee(ctx sdk.Context) (sdk.Coins, error) {
 
 	return coins, nil
 }
-
-// Set temp amount on ica address for cross - chain transfer

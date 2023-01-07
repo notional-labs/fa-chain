@@ -89,6 +89,7 @@ func SwapCallback(k Keeper, ctx sdk.Context, packet channeltypes.Packet, ack *ch
 
 	// save token out amount
 	k.Logger(ctx).Info(fmt.Sprintf("TokenOutAmount = %v", res.TokenOutAmount.Uint64()))
+	k.ICATransferToFeeCollector(ctx, sdk.NewInt64Coin(k.MustGetBaseIBCDenomOnOsmo(ctx).IBCDenom(), res.TokenOutAmount.Int64()))
 
 	// remove token in from store temp fee
 	swapCallback := &types.SwapCallback{}
@@ -108,5 +109,6 @@ func SwapCallback(k Keeper, ctx sdk.Context, packet channeltypes.Packet, ack *ch
 }
 
 func FeeReceiveCallback(k Keeper, ctx sdk.Context, packet channeltypes.Packet, ack *channeltypes.Acknowledgement, args []byte) error {
+	k.Logger(ctx).Info(fmt.Sprintf("executing FeeReceiveCallback on connection = %v", packet))
 	return nil
 }
