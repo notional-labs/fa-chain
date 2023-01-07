@@ -169,6 +169,7 @@ func (k Keeper) EndBlocker(ctx sdk.Context) {
 	}
 
 	// if there is temp fee waiting to be converted, execute icq
+	// currently, it is best - effort, maybe I should add check ?
 	for _, coin := range fees {
 		k.Logger(ctx).Info(fmt.Sprintf("Trying to confirm that ica address has received fund for fee = %v", coin))
 		denomOsmo := k.GetJunoDenomTrack(ctx, coin.Denom)

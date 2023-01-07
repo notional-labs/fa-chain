@@ -10,6 +10,7 @@ import (
 	host "github.com/cosmos/ibc-go/v3/modules/core/24-host"
 	"github.com/notional-labs/fa-chain/utils"
 	"github.com/notional-labs/fa-chain/x/feeabstraction/types"
+	icacallbackstypes "github.com/notional-labs/fa-chain/x/icacallbacks/types"
 
 	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 )
@@ -62,6 +63,20 @@ func (k Keeper) SubmitTxs(
 	sequence, err := k.IcaControllerKeeper.SendTx(ctx, chanCap, connectionId, portID, packetData, timeoutTimestamp)
 	if err != nil {
 		return 0, err
+	}
+
+	// Store the callback data
+	if callbackId != "" && callbackArgs != nil {
+		callback := icacallbackstypes.CallbackData{
+			CallbackKey:  icacallbackstypes.PacketID(portID, channelID, sequence),
+			PortId:       portID,
+			ChannelId:    channelID,
+			Sequence:     sequence,
+			CallbackId:   callbackId,
+			CallbackArgs: callbackArgs,
+		}
+		k.Logger(ctx).Info(utils.LogWithHostZone(chainId, "Storing callback data: %+v", callback))
+		k.ICACallbacksKeeper.SetCallbackData(ctx, callback)
 	}
 
 	return sequence, nil

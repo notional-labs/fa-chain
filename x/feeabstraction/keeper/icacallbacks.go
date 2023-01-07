@@ -99,7 +99,9 @@ func SwapCallback(k Keeper, ctx sdk.Context, packet channeltypes.Packet, ack *ch
 
 	junoDenom := k.GetOsmoDenomTrack(ctx, swapCallback.TokenIn.GetDenom())
 	fees, _ := k.GetTempFee(ctx)
+	k.Logger(ctx).Info(fmt.Sprintf("fees length before = %v \n", fees.Len()))
 	fees = fees.Sub(sdk.NewCoins(sdk.NewCoin(junoDenom, swapCallback.TokenIn.Amount)))
+	k.Logger(ctx).Info(fmt.Sprintf("fees length after = %v \n", fees.Len()))
 	k.SetTempFee(ctx, fees)
 
 	return nil
