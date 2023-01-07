@@ -50,6 +50,7 @@ type AppTestHelper struct {
 	Chain        *ibctesting.TestChain
 	HostChain    *ibctesting.TestChain
 	TransferPath *ibctesting.Path
+	ICAPath      *ibctesting.Path
 
 	QueryHelper  *baseapp.QueryServiceTestHelper
 	TestAccs     []sdk.AccAddress
@@ -180,6 +181,7 @@ func (s *AppTestHelper) CreateICAChannel(owner string) string {
 	// Create ICA Path and then copy over the client and connection from the transfer path
 	icaPath := NewIcaPath(s.Chain, s.HostChain)
 	icaPath = CopyConnectionAndClientToPath(icaPath, s.TransferPath)
+	s.ICAPath = icaPath
 
 	// Register the ICA and complete the handshake
 	s.RegisterInterchainAccount(icaPath.EndpointA, owner)

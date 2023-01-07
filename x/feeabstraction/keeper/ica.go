@@ -128,7 +128,7 @@ func (k Keeper) ICASwap(ctx sdk.Context) error {
 					},
 				},
 				TokenIn:           sdk.NewCoin(denomOsmo, coin.Amount),
-				TokenOutMinAmount: sdk.NewIntFromUint64(0),
+				TokenOutMinAmount: sdk.OneInt(),
 			},
 		}
 

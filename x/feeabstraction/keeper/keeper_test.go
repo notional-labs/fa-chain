@@ -34,8 +34,18 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.CreateTransferChannel(HostChainId)
 
 	// check if Osmosis has pool
-	pool, _ := s.HostApp.GAMMKeeper.GetPoolAndPoke(s.HostCtx, uint64(1))
+	pool, _ := s.HostApp.GAMMKeeper.GetPoolAndPoke(s.HostChain.GetContext(), uint64(1))
 	s.Require().NotNil(pool)
+
+	// fund pool 1 on Osmosis
+	for _, coin := range pool.GetTotalPoolLiquidity(s.HostChain.GetContext()) {
+		s.FundHostAppAccount(pool.GetAddress(), coin)
+	}
+
+	// confirmed that pool 1 has coin in bank keeper
+	coins := s.HostApp.BankKeeper.GetAllBalances(s.HostChain.GetContext(), pool.GetAddress())
+	liq := pool.GetTotalPoolLiquidity(s.HostChain.GetContext())
+	s.Require().Equal(coins, liq)
 }
 
 // ====== IBC ======

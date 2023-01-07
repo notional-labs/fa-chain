@@ -7,6 +7,7 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	icatypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/types"
 	transfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
 	ibctesting "github.com/cosmos/ibc-go/v3/testing"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -123,6 +124,18 @@ func OsmoGenesisStateWithPools(app *osmoapp.OsmosisApp) osmoapp.GenesisState {
 		},
 	}
 	gen[gammtypes.ModuleName] = app.AppCodec().MustMarshalJSON(&gammGen)
+
+	hostGen := icatypes.DefaultHostGenesis()
+	hostGen.Params.HostEnabled = true
+	hostGen.Params.AllowMessages = []string{
+		sdk.MsgTypeURL(&gammtypes.MsgSwapExactAmountIn{}),
+		sdk.MsgTypeURL(&transfertypes.MsgTransfer{}),
+	}
+	icaGen := icatypes.GenesisState{
+		ControllerGenesisState: icatypes.DefaultControllerGenesis(),
+		HostGenesisState:       hostGen,
+	}
+	gen[icatypes.ModuleName] = app.AppCodec().MustMarshalJSON(&icaGen)
 
 	return gen
 }
