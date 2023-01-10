@@ -13,10 +13,10 @@ option go_package = "github.com/notional-labs/fa-chain/x/feeabstraction/types";
 service Query {
   // Parameters queries the parameters of the module.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
-    option (google.api.http).get = "/github.com/notional-labs/fa-chain/feeabstraction/params";
+    option (google.api.http).get = "/fa-chain/feeabstraction/params";
   }
   rpc FeeRate(QueryFeeRateRequest) returns (QueryFeeRateResponse) {
-    option (google.api.http).get = "/github.com/notional-labs/fa-chain/feeabstraction/fee-rate";
+    option (google.api.http).get = "/fa-chain/feeabstraction/fee-rate";
   }
 }
 

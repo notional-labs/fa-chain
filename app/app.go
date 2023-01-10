@@ -104,6 +104,9 @@ import (
 
 	"github.com/notional-labs/fa-chain/docs"
 
+	epochs "github.com/notional-labs/fa-chain/x/epochs"
+	epochskeeper "github.com/notional-labs/fa-chain/x/epochs/keeper"
+	epochstypes "github.com/notional-labs/fa-chain/x/epochs/types"
 	feeabstraction "github.com/notional-labs/fa-chain/x/feeabstraction"
 	feeabstractionkeeper "github.com/notional-labs/fa-chain/x/feeabstraction/keeper"
 	feeabstractiontypes "github.com/notional-labs/fa-chain/x/feeabstraction/types"
@@ -163,6 +166,7 @@ var (
 		transfer.AppModuleBasic{},
 		vesting.AppModuleBasic{},
 		monitoringp.AppModuleBasic{},
+		epochs.AppModuleBasic{},
 		feeabstraction.AppModuleBasic{},
 		interchainquery.AppModuleBasic{},
 		icacallbacks.AppModuleBasic{},
@@ -246,6 +250,7 @@ type App struct {
 	FAKeeper              feeabstractionkeeper.Keeper
 	InterchainqueryKeeper interchainquerykeeper.Keeper
 	IcacallbacksKeeper    icacallbackskeeper.Keeper
+	EpochsKeeper          epochskeeper.Keeper
 
 	// mm is the module manager
 	mm *module.Manager
@@ -279,7 +284,7 @@ func New(
 		govtypes.StoreKey, paramstypes.StoreKey, ibchost.StoreKey, upgradetypes.StoreKey, feegrant.StoreKey,
 		evidencetypes.StoreKey, ibctransfertypes.StoreKey, capabilitytypes.StoreKey,
 		feeabstractiontypes.StoreKey, interchainquerytypes.StoreKey, icacontrollertypes.StoreKey, icahosttypes.StoreKey,
-		icacallbackstypes.StoreKey,
+		icacallbackstypes.StoreKey, epochstypes.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
@@ -328,6 +333,7 @@ func New(
 		appCodec, keys[minttypes.StoreKey], app.GetSubspace(minttypes.ModuleName), &stakingKeeper,
 		app.AccountKeeper, app.BankKeeper, authtypes.FeeCollectorName,
 	)
+	epochsKeeper := epochskeeper.NewKeeper(appCodec, keys[epochstypes.StoreKey])
 	app.DistrKeeper = distrkeeper.NewKeeper(
 		appCodec, keys[distrtypes.StoreKey], app.GetSubspace(distrtypes.ModuleName), app.AccountKeeper, app.BankKeeper,
 		&stakingKeeper, authtypes.FeeCollectorName, app.ModuleAccountAddrs(),
@@ -471,6 +477,13 @@ func New(
 	// Note, authentication module packets are routed to the top level of the middleware stack
 	app.IBCKeeper.SetRouter(ibcRouter)
 
+	app.EpochsKeeper = *epochsKeeper.SetHooks(
+		epochstypes.NewMultiEpochHooks(
+			app.FAKeeper.Hooks(),
+		),
+	)
+	epochsModule := epochs.NewAppModule(appCodec, app.EpochsKeeper)
+
 	/****  Module Options ****/
 
 	// NOTE: we may consider parsing `appOpts` inside module constructors. For the moment
@@ -502,6 +515,7 @@ func New(
 		ibc.NewAppModule(app.IBCKeeper),
 		params.NewAppModule(app.ParamsKeeper),
 		transfer.NewAppModule(app.TransferKeeper),
+		epochsModule,
 		faModule,
 		interchainQueryModule,
 		icacallbacksModule,
@@ -529,6 +543,7 @@ func New(
 		banktypes.ModuleName,
 		govtypes.ModuleName,
 		crisistypes.ModuleName,
+		epochstypes.ModuleName,
 		feeabstractiontypes.ModuleName,
 		genutiltypes.ModuleName,
 		feegrant.ModuleName,
@@ -549,6 +564,7 @@ func New(
 		slashingtypes.ModuleName,
 		vestingtypes.ModuleName,
 		minttypes.ModuleName,
+		epochstypes.ModuleName,
 		feeabstractiontypes.ModuleName,
 		genutiltypes.ModuleName,
 		evidencetypes.ModuleName,
@@ -581,6 +597,7 @@ func New(
 		crisistypes.ModuleName,
 		ibchost.ModuleName,
 		icatypes.ModuleName,
+		epochstypes.ModuleName,
 		feeabstractiontypes.ModuleName,
 		genutiltypes.ModuleName,
 		evidencetypes.ModuleName,
@@ -810,6 +827,7 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(crisistypes.ModuleName)
 	paramsKeeper.Subspace(ibctransfertypes.ModuleName)
 	paramsKeeper.Subspace(ibchost.ModuleName)
+	paramsKeeper.Subspace(epochstypes.ModuleName)
 	paramsKeeper.Subspace(feeabstractiontypes.ModuleName)
 	paramsKeeper.Subspace(interchainquerytypes.ModuleName)
 	paramsKeeper.Subspace(icacallbackstypes.ModuleName)

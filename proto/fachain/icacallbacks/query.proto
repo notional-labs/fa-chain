@@ -14,20 +14,20 @@ option go_package = "github.com/notional-labs/fa-chain/x/icacallbacks/types";
 service Query {
   // Parameters queries the parameters of the module.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
-    option (google.api.http).get = "/Stride-Labs/fachain/icacallbacks/params";
+    option (google.api.http).get = "/fa-chain/fachain/icacallbacks/params";
   }
   // Queries a CallbackData by index.
   rpc CallbackData(QueryGetCallbackDataRequest)
       returns (QueryGetCallbackDataResponse) {
     option (google.api.http).get =
-        "/Stride-Labs/fachain/icacallbacks/callback_data/{callback_key}";
+        "/fa-chain/fachain/icacallbacks/callback_data/{callback_key}";
   }
 
   // Queries a list of CallbackData items.
   rpc CallbackDataAll(QueryAllCallbackDataRequest)
       returns (QueryAllCallbackDataResponse) {
     option (google.api.http).get =
-        "/Stride-Labs/fachain/icacallbacks/callback_data";
+        "/fa-chain/fachain/icacallbacks/callback_data";
   }
 
   // this line is used by starport scaffolding # 2
