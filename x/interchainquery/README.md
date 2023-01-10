@@ -52,7 +52,7 @@ The `interchainquery` module keeps `Query` objects and modifies the information 
 
 ## Events
 
-The `interchainquery` module emits an event at the end of every `stride_epoch`s (e.g. 15 minutes on local testnet).
+The `interchainquery` module emits an event at the end of every `test_epoch`s (e.g. 15 minutes on local testnet).
 
 The purpose of this event is to send interchainqueries that query data about staking rewards, which Stride uses to reinvest (aka autocompound) staking rewards.
 
